@@ -1,9 +1,14 @@
 class Element:
-    def __init__(self):
-        self.name = None
-        self.type = None
-        self.size = None
-        self.importance = None
+    name = ''
+    type = ''
+    size = 0
+    importance = 0
+
+    def __init__(self, name, type, size, importance):
+        self.name = name
+        self.type = type
+        self.size = size
+        self.importance = importance
 
     def exampleSet(self):
         exampleElements = [
@@ -14,6 +19,3 @@ class Element:
 
         ]
         return exampleElements
-
-
-
