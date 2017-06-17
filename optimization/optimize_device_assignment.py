@@ -38,6 +38,11 @@ def optimize(elements, devices):
     for d in devices:
         model.addConstr(quicksum(x[(e, d)] for e in elements) >= 1,
                         'device_has_some_elements_constraint_%s' % d.name)
+
+    # Constraint 3: show element at least once
+    for e in elements:
+        model.addConstr(quicksum(x[(e, d)] for d in devices) >= 1,
+                        'element_at_least_once_constraint_%s' % e.name)
     model.update()
 
     # Objective function
@@ -48,6 +53,8 @@ def optimize(elements, devices):
 
     # Solve
     model.optimize()
+    if model.status != GRB.status.OPTIMAL:
+        return None
 
     # Create output list of elements (sorted)
     output = {}

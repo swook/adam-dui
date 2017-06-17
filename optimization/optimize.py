@@ -23,7 +23,17 @@ Output:
 '''
 def optimize(elements, devices):
     # Run 1st optimization
-    output = optimize_device_assignment.optimize(elements, devices)
+    output = None
+    while True:
+        output = optimize_device_assignment.optimize(elements, devices)
+
+        # If optimization failed, try increasing capacity of all devices by 1
+        if output is None:
+            for device in devices:
+                device.capacity += 1
+        else:
+            # We have found a solution, break this infinite loop
+            break
 
     # Run 2nd optimization
     for device_class, elements in output.items():
