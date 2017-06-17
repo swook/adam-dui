@@ -38,7 +38,7 @@ def optimize(elements):
     cost = quicksum(e.importance * (j + 1) * x[(e, j)]
                     for e in elements
                         for j in positions)
-    model.setObjective(cost, GRB.MAXIMIZE)
+    model.setObjective(cost, GRB.MINIMIZE)
 
     # Solve
     model.optimize()

@@ -1,3 +1,5 @@
+import random
+
 from element import Element
 import optimize_layout
 
@@ -7,7 +9,8 @@ elements = [
     Element(name='next',  type='', size=1, importance=2),
     Element(name='prev',  type='', size=1, importance=2),
 ]
+random.shuffle(elements)
 
-print('inputs: %s' % [e.name for e in elements])
 output = optimize_layout.optimize(elements)
+print('inputs: %s' % [e.name for e in elements])
 print('outputs: %s' % [e.name for e in output])
