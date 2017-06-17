@@ -11,6 +11,10 @@ web_input = '''
         {
           "deviceClass": "smartphone",
           "capacity": 6
+        },
+        {
+          "deviceClass": "tv",
+          "capacity": 15
         }
       ],
       "elements": [
