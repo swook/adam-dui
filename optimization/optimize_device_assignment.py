@@ -34,12 +34,7 @@ def optimize(elements, devices):
         model.addConstr(quicksum(e.size * x[(e, d)] for e in elements) <= d.capacity,
                         'capacity_constraint_%s' % d.name)
 
-    # Constraint 2: element should be somewhere
-    for e in elements:
-        model.addConstr(quicksum(x[(e, d)] for d in devices) >= 1,
-                        'element_is_assigned_constraint_%s' % e.name)
-
-    # Constraint 3: a device class should have at least one element assigned
+    # Constraint 2: a device class should have at least one element assigned
     for d in devices:
         model.addConstr(quicksum(x[(e, d)] for e in elements) >= 1,
                         'device_has_some_elements_constraint_%s' % d.name)
