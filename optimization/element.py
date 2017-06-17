@@ -19,3 +19,6 @@ class Element:
 
         ]
         return exampleElements
+
+    def __repr__(self):
+        return 'Element %s (%d) %d!' % (self.name, self.size, self.importance)
