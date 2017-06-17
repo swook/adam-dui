@@ -90,4 +90,4 @@ def to_web(our_output):
     output = {}
     for device_class, elements in our_output.items():
         output[device_class] = [e.name for e in elements]
-    return json.dumps(output)
+    return json.dumps(output).decode('utf-8')
