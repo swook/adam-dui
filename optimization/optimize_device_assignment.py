@@ -1,4 +1,6 @@
-import gurobipy
+import gurobipy as grb
+import numpy as np
+
 
 '''
 
