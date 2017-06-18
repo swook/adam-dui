@@ -1,3 +1,6 @@
 [submodule "Webstrates"]
 	path = Webstrates
 	url = https://github.com/Webstrates/Webstrates.git
+[submodule "simple-websocket-server"]
+	path = simple-websocket-server
+	url = https://github.com/dpallot/simple-websocket-server
