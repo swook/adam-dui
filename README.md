@@ -1,5 +1,7 @@
 # SoManyDevices
 
+![SoManyDevices Demo](material/demo.gif)
+
 ## Optimizer
 
 To install:
