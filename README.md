@@ -2,10 +2,13 @@
 
 ## Optimizer
 
-```
-cd optimization
-python run_server.py
-```
+To install:
+
+ * From the repository root:
+    * Navigate to subfolder `simple-websocket-server`
+    * Run `sudo python setup.py install`
+    * Navigate to subfolder `optimization`
+    * Run `python run_server.py`
 
 ## Webstrates
 
