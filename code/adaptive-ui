@@ -1,0 +1,93 @@
+<html __wid="V7tbCaGA" class="gr__localhost">
+
+<head __wid="Q9RM48WC">
+  <title __wid="9VbuK84T">adaptive-ui</title>
+
+  <style __wid="rTG68DLx">
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #manager {
+      display: none;
+    }
+
+    #composition {
+      padding: 0;
+      margin: 0;
+      border: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+
+  <script __wid="O7_voj76">
+    window.getParameterByName = function (name, url) {
+      if (!url) {
+        url = window.location.href;
+      }
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+  </script>
+
+  <script __wid="6d3Lcwjs">
+    const addComposition = (deviceClass) => {
+      let composition = document.createElement("transient");
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("id", "composition");
+      iframe.setAttribute("src", `/${deviceClass}/`);
+
+      composition.appendChild(iframe);
+      document.body.appendChild(composition);
+    };
+
+    const connectToManager = (address) => {
+
+      new WebSocket(`ws://${address}`);
+    };
+
+    webstrate.on("loaded", () => {
+      console.log('webstrate loaded');
+
+      const deviceClass = getParameterByName("deviceClass");
+      console.log(deviceClass);
+      addComposition(deviceClass);
+
+      let managerFrame = document.querySelector('#manager');
+
+      const sendMessageToManager = window.sendMessageToManager = (message) => {
+        managerFrame.contentWindow.webstrate.signal(message);
+      };
+
+      managerFrame.webstrate.on("transcluded", (webstrateId) => {
+
+        if (managerFrame && managerFrame.contentWindow.webstrate && managerFrame.contentWindow.webstrate.webstrateId === webstrateId) {
+          console.debug("manager transcluded");
+
+          let message = {
+            cmd: "deviceJoin",
+            deviceClass: deviceClass
+          };
+
+          sendMessageToManager(message);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body __wid="hxuDWmri">
+  <iframe id="manager" src="/adaptive-ui-manager/" __wid="7A-g-l3_"></iframe>
+  <DIV style="position: fixed !important; z-index: 2147483647 !important; display: block !important; width: 100% !important; height: 100% !important; top: 10px !important; right: 10px !important; max-height: 182px !important; max-width: 368px !important;" __wid="enKLO4sT">
+    <iframe lpsrc style="border: medium none !important; position: relative !important; height: 100% !important; width: 100% !important; visibility: visible !important;" scrolling="no" __wid="6wjipPOr"></iframe>
+  </DIV>
+</body>
+
+</html>

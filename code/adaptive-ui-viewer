@@ -1,0 +1,160 @@
+<html __wid="h51kJA1u" class="gr__localhost">
+
+<head __wid="k0x7MISD">
+    <link __wid="P-Bw7Ij8" href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    
+    <style __wid="Ozr57VET">
+        html,
+        body {
+            width: 1920px;
+            height: 1080px;
+        }
+
+        #container {
+            display: flex;
+            flex: 1;
+            flex-wrap: wrap;
+            width: 100%;
+            height: 100%;
+            margin-top: 30px;
+        }
+
+        .remove {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: darkred;
+            cursor: pointer;
+        }
+
+        .device {
+            position: relative;
+            /*margin: 10px;*/
+            /*flex: 1;*/
+            width: 50%;
+            height: 50%;
+            /*background-color: lime;*/
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+
+        .device>iframe {
+            position: relative;
+            border: 0;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+
+        .tv {
+            background-image: url('tv.png');
+        }
+
+        .tv>iframe {
+            top: 30px;
+            left: 25px;
+            width: 650px;
+            height: 373px;
+        }
+
+        .laptop {
+            background-image: url('laptop.png');
+        }
+
+        .laptop>iframe {
+            top: 45px;
+            left: 145px;
+            width: 660px;
+            height: 408px;
+        }
+
+        .tablet {
+            background-image: url('tablet.png');
+        }
+
+        .tablet>iframe {
+            top: 56px;
+            left: 50px;
+            width: 760px;
+            height: 433px;
+        }
+
+        .smartphone {
+            background-image: url('smartphone.png');
+        }
+
+        .smartphone>iframe {
+            top: 76px;
+            left: 20px;
+            width: 218px;
+            height: 390px;
+        }
+
+        .smartwatch {
+            background-image: url('smartwatch.png');
+        }
+
+        .smartwatch>iframe {
+            top: 140px;
+            left: 65px;
+            width: 185px;
+            height: 240px;
+        }
+    </style>
+
+    <script __wid="WJG-niYd">
+        webstrate.on("loaded", () => {
+            let container = document.querySelector('#container');
+
+            document.body.addEventListener("click", (event) => {
+                if (event.target.closest('.remove')) {
+                    event.target.closest('.device').remove();
+                }
+            });
+
+            const addDevice = (deviceClass) => {
+                let device = document.createElement("div");
+                device.classList.add("device");
+                device.classList.add(deviceClass);
+
+                let frame = document.createElement("iframe");
+                frame.setAttribute("src", `/adaptive-ui/?deviceClass=${deviceClass}`);
+                device.appendChild(frame);
+
+                let remove = document.createElement("div");
+                remove.classList.add("remove");
+                remove.innerHTML = '<i class="material-icons">delete</i>';
+                device.appendChild(remove);
+
+                container.appendChild(device);
+            }
+
+            document.querySelector('#add-tv').addEventListener("click", () => addDevice("tv"));
+            document.querySelector('#add-laptop').addEventListener("click", () => addDevice("laptop"));
+            document.querySelector('#add-tablet').addEventListener("click", () => addDevice("tablet"));
+            document.querySelector('#add-smartphone').addEventListener("click", () => addDevice("smartphone"));
+            document.querySelector('#add-smartwatch').addEventListener("click", () => addDevice("smartwatch"));
+
+            let clearDevices = document.querySelector('#clear-devices')
+            console.log('clear devices');
+            clearDevices.addEventListener("click", () => {
+                console.log('clear devices', container);
+                document.querySelector('#container').innerHTML = "";
+            });
+        });
+    </script>
+</head>
+
+<body __wid="r-F7fFsc">
+    <div __wid="4BiVF1uY">
+        <button id="clear-devices" __wid="qZf-gSLn">Clear Devices</button>
+        <button id="add-tv" __wid="-nMiogTx">Add TV</button>
+        <button id="add-laptop" __wid="BaX9yN8e">Add Laptop</button>
+        <button id="add-tablet" __wid="G9eDjcsU">Add Tablet</button>
+        <button id="add-smartphone" __wid="8QkhX1Oh">Add Smartphone</button>
+        <button id="add-smartwatch" __wid="OTBuDrfX">Add Smartwatch</button>
+    </div>
+    <div id="container" __wid="7wRXhZ0E"></div>
+</body>
+
+</html>

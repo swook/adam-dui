@@ -1,0 +1,355 @@
+<html __wid="PEHtYkiw" class="gr__localhost">
+
+<head __wid="2v9-9lyc">
+    <script __wid="pTnuYpp2">
+        webstrate.on("loaded", () => {
+
+            if (window === window.parent) {
+                console.debug("manager instance running");
+
+                /////////////////////////////////////////////
+                // DEBUGGING STUFF
+                /////////////////////////////////////////////
+
+                let deviceClasses = ["tv", "laptop", "tablet", "smartphone", "smartwatch"];
+
+                document.querySelector('#clear-device-class-views').addEventListener("click", () => {
+                    try {
+                        deviceClasses.forEach((deviceClass) => {
+                            document.querySelector(`#${deviceClass}`).contentWindow.document.head.innerHTML = "";
+                            document.querySelector(`#${deviceClass}`).contentWindow.document.body.innerHTML = "";
+                        });
+                        console.log('all devices cleared');
+                    }
+                    catch (error) {
+                        console.error(`could not find ${deviceClass}`);
+                    }
+                });
+
+                document.querySelector('#fake-optimization').addEventListener("click", () => {
+                    // REMOVE: expected data
+                    let data = {
+                        tv: ["video", "play", "next", "prev"],
+                        laptop: ["video", "play", "next", "prev"],
+                        tablet: ["video", "play", "next", "prev"],
+                        smartphone: ["play", "next", "prev"],
+                        smartwatch: ["play"]
+                    };
+
+                    onOptimizerResult(data);
+                });
+
+                /////////////////////////////////////////////
+                // OPTIMIZER
+                /////////////////////////////////////////////
+
+                let optimizerSocket;
+
+                const connectToOptimizer = (url, options = {}) => {
+                    try {
+                        optimizerSocket = new WebSocket(url);
+
+                        optimizerSocket.onopen = function (event) {
+                            console.log(`connected to optimizer on ${url}`);
+
+                            setInterval(() => {
+                                const aliveMessage = { type: "alive" };
+                                optimizerSocket.send(JSON.stringify(aliveMessage));
+                            }, 10000);
+                        }
+
+                        optimizerSocket.onmessage = function (event) {
+
+                            try {
+                                if (event.data) {
+                                    const data = JSON.parse(event.data);
+
+                                    if (options.onResult) {
+                                        onOptimizerResult(data);
+                                    }
+                                }
+                            }
+                            catch (error) {
+                                console.error(error);
+                            }
+                        }
+
+                        optimizerSocket.onclose = function (event) {
+
+                        }
+
+                        optimizerSocket.onerror = function (event) {
+
+                        }
+                    }
+                    catch (error) {
+                        console.error("could not connect to optimizer");
+                    }
+                };
+
+                const sendDataToOptimizer = (data) => {
+                    console.debug('send data %o to optimizer', data)
+                    optimizerSocket.send(JSON.stringify(data));
+                };
+
+                const onOptimizerResult = (data) => {
+                    console.debug('received optimized result %o, populating DOM', data);
+
+                    for (deviceClass in data) {
+                        // console.log(deviceClass, expectedData[deviceClass]);
+
+                        let elements = data[deviceClass];
+                        populateDOMForDeviceClass(deviceClass, elements);
+                    }
+                };
+
+                const populateDOMForDeviceClass = (deviceClass, elements) => {
+                    let classFrame = document.querySelector(`#${deviceClass}`);
+                    let classDocument = classFrame.contentWindow.document;
+
+                    let head = classFrame.querySelector('head');
+                    // clear head (style)
+                    if (head) {
+                        head.innerHTML = "";
+                    }
+
+                    // append all styles from original document
+                    let websiteDocument = websiteFrame.contentWindow.document;
+                    Array.from(websiteDocument.head.children).forEach((child) => {
+                        let clone = child.cloneNode(true);
+                        classDocument.head.appendChild(clone);
+                    });
+
+                    // clear body (content)
+                    classDocument.body.innerHTML = "";
+
+                    elements.forEach((elementName) => {
+                        let element = getElementByName(elementName)
+                        let clone = element.cloneNode(true);
+                        classDocument.body.appendChild(clone);
+                    });
+                };
+
+                connectToOptimizer('ws://localhost:8000', {
+                    onResult: onOptimizerResult
+                });
+
+                /////////////////////////////////////////////
+                // Target Website
+                /////////////////////////////////////////////
+
+                let websiteFrame = document.querySelector('#website');
+                let nameToElementAndData = {};
+
+                // This loads the "target" website and builds a element name to
+                // DOM element and element data dictionary.
+                let websiteWindow = websiteFrame.contentWindow;
+                let websiteDocument = websiteWindow.document;
+                websiteFrame.webstrate.on("transcluded", (webstrateId) => {
+                    if (websiteWindow.webstrate.webstrateId === webstrateId) {
+                        console.debug("website transcluded, creating element map");
+
+                        const elementAttribute = 'data-element';
+                        const elementSelector = `[${elementAttribute}]`;
+
+                        let websiteFrame = document.querySelector('#website');
+                        let websiteWindow = websiteFrame.contentWindow;
+                        let websiteDocument = websiteWindow.document;
+
+                        let elements = Array.from(websiteDocument.querySelectorAll(elementSelector));
+                        elements.forEach((element) => {
+                            let data = JSON.parse(element.getAttribute(elementAttribute));
+                            nameToElementAndData[data.name] = {
+                                element: element,
+                                data: data
+                            };
+                        });
+
+                        console.log('built name to elements and data %o', nameToElementAndData);
+                    }
+                });
+
+                const getElementByName = (name) => {
+                    return nameToElementAndData[name].element;
+                };
+
+                /////////////////////////////////////////////
+                // UI
+                /////////////////////////////////////////////
+
+                // clientIdToDevice[clientIdlet] = {
+                //     id: senderId,
+                //     deviceClass: message.deviceClass
+                // };
+                let clientIdToDevice = {};
+
+                /**
+                 * This function is called whenever a new device joins.
+                 */
+                const deviceJoined = (device) => {
+                    optimize();
+                };
+
+                /**
+                 * This function is called whenever a device leaves.
+                 */
+                const deviceLeft = (device) => {
+                    optimize();
+                };
+
+                /**
+                 * Collect all data that is necessary for the optimizer to
+                 * compute the allocation and layout.
+                 */
+                const collectData = () => {
+
+                    // create a distinct set of device classes and assign
+                    // capacities to them
+                    let devices = [];
+                    for (id in clientIdToDevice) {
+                        let device = clientIdToDevice[id];
+                        let deviceClass = device.deviceClass;
+
+                        let capacity;
+                        switch (deviceClass) {
+                            case "tv":
+                                capacity = 6;
+                                break;
+                            case "laptop":
+                                capacity = 10;
+                                break;
+                            case "tablet":
+                                capacity = 4;
+                                break;
+                            case "smartphone":
+                                capacity = 3;
+                                break;
+                            case "smartwatch":
+                                capacity = 1;
+                                break;
+                        }
+
+                        if (!devices.find(d => d.deviceClass === deviceClass)) {
+                            devices.push({
+                                deviceClass: device.deviceClass,
+                                capacity: capacity
+                            });
+                        }
+                    }
+
+                    // create a set of elements with their respective name, size, and importance
+                    let elements = Object.entries(nameToElementAndData).map((entry, idx) => {
+                        // Object.entries returns an array of arrays where each entry array
+                        // is index[0] is key, and index[1] is the value
+                        let name = entry[0];
+                        let elementAndData = entry[1];
+                        let data = elementAndData.data;
+                        return data;
+                    });
+
+                    // { "devices": [
+                    //     {
+                    //       "deviceClass": "tablet",
+                    //       "capacity": 8
+                    //     },
+                    //     {
+                    //       "deviceClass": "smartphone",
+                    //       "capacity": 6
+                    //     }
+                    //   ],
+                    //   "elements": [
+                    //     {
+                    //       "name": "video",
+                    //       "size": 10,
+                    //       "importance": 10
+                    //     },
+                    //     {
+                    //       "name": "play",
+                    //       "size": 1,
+                    //       "importance": 9
+                    //     },
+                    //     {
+                    //       "name": "next",
+                    //       "size": 1,
+                    //       "importance": 2
+                    //     },
+                    //     {
+                    //       "name": "prev",
+                    //       "size": 1,
+                    //       "importance": 2
+                    //     }
+                    //   ]
+                    // }
+                    return {
+                        devices: devices,
+                        elements: elements
+                    };
+                };
+
+                /**
+                 * Optimizing step. This function is called whenever a new device
+                 * joins or a device leaves.
+                 */
+                const optimize = () => {
+                    const data = collectData();
+
+                    if (data.devices.length > 0) {
+                        sendDataToOptimizer(data);
+                    }
+                };
+
+                // Triggered when a device leaves
+                webstrate.on("clientPart", (clientId) => {
+                    if (clientIdToDevice[clientId]) {
+                        console.debug(`client ${clientId} left`);
+                        let device = clientIdToDevice[clientId];
+                        delete clientIdToDevice[clientId];
+                        deviceLeft(device);
+                    }
+                });
+
+                // Triggered when a device joins. It will identify the device's class
+                // and the manager will keep its client id to talk to it later.
+                webstrate.on("signal", (message, senderId) => {
+                    console.debug(`manager received message ${message}`);
+
+                    switch (message.cmd) {
+                        case "deviceJoin":
+                            let device = {
+                                id: senderId,
+                                deviceClass: message.deviceClass
+                            };
+                            clientIdToDevice[senderId] = device;
+                            deviceJoined(device);
+                            break;
+                        case "websiteElements":
+
+                            break;
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body __wid="DUrTIB0w">
+    <div __wid="K_jPJROZ">
+        <div __wid="UINFSrQp">Controls</div>
+        <button id="clear-device-class-views" __wid="1r_uPqIi">Clear device class views</button>
+        <button id="fake-optimization" __wid="_lJdkWOP">Fake optized result</button>
+    </div>
+    <div __wid="CcFkear1">
+        <div __wid="vsIFVNR_">Target Website</div>
+        <iframe id="website" src="/youtube/" __wid="gq64J9Jw"></iframe>
+    </div>
+    <div __wid="J9pFtet1">
+        <div __wid="9nS5eAUW">Device Class Views</div>
+        <iframe id="tv" src="/tv/" __wid="AB9XoA0F"></iframe>
+        <iframe id="laptop" src="/laptop/" __wid="UcyIi1ry"></iframe>
+        <iframe id="tablet" src="/tablet/" __wid="w5aQfiFP"></iframe>
+        <iframe id="smartphone" src="/smartphone/" __wid="tRszdtyK"></iframe>
+        <iframe id="smartwatch" src="/smartwatch/" __wid="cTyMCezB"></iframe>
+    </div>
+</body>
+
+</html>

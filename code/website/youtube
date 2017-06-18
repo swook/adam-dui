@@ -1,0 +1,97 @@
+<html __wid="NGNifFBR">
+
+<head __wid="3PoF7wIN">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" __wid="P-Bw7Ij8"/>
+    <style __wid="07ICNdKu">
+        html,
+        body {
+            font-family: Roboto, sans-serif;
+            padding: 0;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            /*background-color: orange;*/
+        }
+
+        body {
+            font-size: 3em;
+            /*background-color: hotpink;*/
+        }
+
+        .material-icons {
+            font-size: 2em;
+        }
+
+        .button {
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .button:hover i {
+            background-color: lightgray;
+        }
+
+        #video {
+            clear: both;
+        }
+
+        video {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        #play {
+            /*background-color: deepskyblue;*/
+            float: left;
+        }
+
+        #next {
+            /*background-color: lime;*/
+            float: left;
+        }
+
+        #prev {
+            /*background-color: salmon;*/
+            float: left;
+        }
+
+        #comments {
+            clear: both;
+            background-color: lightgray;
+            padding: 10px;
+        }
+
+        #comments .comment {
+            background-color: white;
+            margin: 10px;
+            padding: 5px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body __wid="nPAaD7V1">
+    <video __wid="X5Wuh01C" id="video" data-element="{&quot;name&quot;:&quot;video&quot;,&quot;size&quot;:5,&quot;importance&quot;:12}" controls>
+        <source __wid="he2ius5I" src="/youtube/big_buck_bunny.mp4"/>
+    </video>
+    <div id="play" data-element="{&quot;name&quot;:&quot;play&quot;,&quot;size&quot;:1,&quot;importance&quot;:10}" __wid="NeLFZe_Z" class="button">
+        <i class="material-icons" __wid="HviGp3Me">play_arrow</i>
+    </div>
+    <div id="next" data-element="{&quot;name&quot;:&quot;next&quot;,&quot;size&quot;:1,&quot;importance&quot;:2}" __wid="rKuVeblF" class="button">
+        <i class="material-icons" __wid="HviGp3Me">skip_next</i>
+    </div>
+    <div id="prev" data-element="{&quot;name&quot;:&quot;prev&quot;,&quot;size&quot;:1,&quot;importance&quot;:2}" __wid="EcJrvSwj" class="button">
+        <i class="material-icons" __wid="HviGp3Me">skip_previous</i>
+    </div>
+    <div id="comments" data-element="{&quot;name&quot;:&quot;comments&quot;,&quot;size&quot;:3,&quot;importance&quot;:5}" __wid="8Dcs8q2m">
+        <div __wid="PE93FP0Q">Comments</div>
+        <div __wid="c-TN9ZWJ" class="comment">SoManyDisplays is awesome!</div>
+        <div __wid="QsFIPqP2" class="comment">Keep going!</div>
+        <div class="comment" __wid="pvIL2rvE">Computational Interaction rocks</div>
+    </div>
+</body>
+
+</html>
