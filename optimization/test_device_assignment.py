@@ -111,7 +111,7 @@ elements = [
 # Define devices and users who can access devices
 devices = [
     Device(
-        name='tv',
+        name='TV',
         capacity=15,
         affordances=Properties(
             visual_display=5,
@@ -176,10 +176,24 @@ devices = [
         ),
         users=[bob],
     ),
+    Device(
+        name='Abandoned Computer',
+        capacity=5,
+        affordances=Properties(
+            visual_display=3,
+            text_input=5,
+            touch_pointing=0,
+            mouse_pointing=4,
+        ),
+        users=[],
+    ),
 ]
 
 output = optimize_device_assignment.optimize(elements, devices, users)
 
 print('\ninputs: %s' % [e.name for e in elements])
-for key, elements in output.items():
-    print('outputs[%s]: %s' % (key, [e.name for e in elements]))
+for device_name, values in output.items():
+    print('%s:' % device_name)
+    for element, widget in values:
+        print('> %s: %s' % (element, widget))
+    print('')

@@ -20,13 +20,7 @@ class Device:
 
     def calculate_compatibility(self, widget):
         assert isinstance(widget, Widget)
-
-        compatibility = 0
-        for key, value in self.affordances.items():
-            if key not in widget.requirements:
-                raise LookupError('No such property: %s' % key)
-            compatibility += widget.requirements[key] * value
-        return compatibility
+        return self.affordances.dot(widget.requirements)
 
     def has_access(self, user):
         return user in self.users

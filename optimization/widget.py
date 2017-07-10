@@ -14,5 +14,8 @@ class Widget:
         self.requirements = requirements
         self.visual_quality = visual_quality
 
+    def __repr__(self):
+        return '[Widget size=%d visual_quality=%d]' % (self.size, self.visual_quality)
+
     def quality_metric(self):
         return self.visual_quality

@@ -15,3 +15,9 @@ class Properties:
         self.text_input = text_input
         self.touch_pointing = touch_pointing
         self.mouse_pointing = mouse_pointing
+
+    def dot(self, other):
+        return self.visual_display * other.visual_display + \
+               self.text_input * other.text_input + \
+               self.touch_pointing * other.touch_pointing + \
+               self.mouse_pointing * other.mouse_pointing
