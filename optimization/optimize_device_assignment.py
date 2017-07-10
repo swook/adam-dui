@@ -2,10 +2,16 @@ from gurobipy import *
 import numpy as np
 
 
+def preprocess(elements, devices, users):
+    pass
+
+
 '''
 
 Input:
     elements (list of Element)
+    devices (list of Device)
+    users (list of User)
 
 Output:
     dict (device_class => list of Element)
@@ -15,7 +21,7 @@ Output:
         'watch': [Element1],
     }
 '''
-def optimize(elements, devices):
+def optimize(elements, devices, users):
     n = len(elements)
     m = len(devices)
 
@@ -46,7 +52,7 @@ def optimize(elements, devices):
     model.update()
 
     # Objective function
-    cost = quicksum(e.importance * x[(e, d)]
+    cost = quicksum(e.importance * x[(w, e, d)]
                     for e in elements
                         for d in devices)
     model.setObjective(cost, GRB.MAXIMIZE)

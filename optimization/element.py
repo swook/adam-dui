@@ -1,24 +1,19 @@
+from widget import Widget
+
 class Element:
+
     name = ''
-    type = ''
-    size = 0
     importance = 0
+    widgets = []
 
-    def __init__(self, name, type, size, importance):
+    def __init__(self, name, importance, widgets):
+        assert len(widgets) > 0
+        for widget in widgets:
+            assert isinstance(widget, Widget)
+
         self.name = name
-        self.type = type
-        self.size = size
         self.importance = importance
-
-    def exampleSet(self):
-        exampleElements = [
-            ['default']
-            ['control']
-            ['display']
-
-
-        ]
-        return exampleElements
+        self.widgets = widgets
 
     def __repr__(self):
-        return 'Element %s (%d) %d!' % (self.name, self.size, self.importance)
+        return '[Element %s (%d)]' % (self.name, self.importance)
