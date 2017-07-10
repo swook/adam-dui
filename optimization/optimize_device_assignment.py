@@ -19,7 +19,7 @@ Output:
 '''
 def optimize(elements, devices, users):
     [widget_element_imp, element_user_imp, element_widget_device_comp, user_device_acc,
-     widget_element_size, num_users, num_devices, num_elements, num_widgets] = pre_process(elements, devices, users)
+     widget_element_size, num_users, num_devices, num_elements, num_widgets] = pre_process_objects(elements, devices, users)
 
     # Create empty model
     model = Model('device_assignment')
