@@ -30,4 +30,4 @@ class Device:
         self.users.append(user)
 
     def __repr__(self):
-        return '[Device %s (%d)]' % (self.name, self.capacity)
+        return '[Device "%s" capacity=%d]' % (self.name, self.capacity)

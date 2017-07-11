@@ -191,9 +191,23 @@ devices = [
 
 output = optimize_device_assignment.optimize(elements, devices, users)
 
-print('\ninputs: %s' % [e.name for e in elements])
+print('\nInputs')
+print('=======\n')
+print('Users: ' + ', '.join([u.name for u in users]))
+print('')
+for element in elements:
+    print(element)
+    print('No. of widgets: %d\n' % len(element.widgets))
+
+for device in devices:
+    print(device)
+    print('Users with access (%d): %s\n' % (len(device.users), ', '.join([user.name for user in device.users])))
+
+print('\nOutputs')
+print('=======\n')
+
 for device_name, values in output.items():
     print('%s:' % device_name)
     for element, widget in values:
-        print('> %s: %s' % (element, widget))
+        print('> %s: %s' % (element.name, widget))
     print('')

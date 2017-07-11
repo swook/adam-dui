@@ -16,4 +16,4 @@ class Element:
         self.widgets = widgets
 
     def __repr__(self):
-        return '[Element %s (%d)]' % (self.name, self.importance)
+        return '[Element "%s" importance=%d]' % (self.name, self.importance)
