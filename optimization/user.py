@@ -3,6 +3,7 @@ import uuid
 class User(object):
     name = ''
     id = None
+    importance = {}
 
     def __init__(self, name=''):
         self.name = name

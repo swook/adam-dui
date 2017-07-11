@@ -9,9 +9,13 @@ import optimize_device_assignment
 
 # Define all users
 alice    = User(name='alice')
+alice.importance = {'video': 10, 'play': 5, 'next': 5, 'prev': 5, 'comments': 1}
 bob      = User(name='bob')
+bob.importance = {'video': 10, 'play': 1, 'next': 1, 'prev': 1, 'comments': 1}
 caroline = User(name='caroline')
+caroline.importance = {'video': 10, 'play': 10, 'next': 10, 'prev': 10, 'comments': 1}
 darryl   = User(name='darryl')
+darryl.importance = {'video': 1, 'play': 1, 'next': 1, 'prev': 1, 'comments': 10}
 users = [alice, bob, caroline, darryl]
 
 # Define all elements and widgets

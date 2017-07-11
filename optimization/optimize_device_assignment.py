@@ -115,6 +115,11 @@ def pre_process_objects(elements, devices, users):
             for d in range(num_devices):
                 element_widget_device_comp[e, w, d] = devices[d].calculate_compatibility(widget)
 
-    element_user_imp = np.ones((num_elements, num_users)) #define importance per element and user!
+    element_user_imp = np.zeros((num_elements, num_users))
+    element_name_index = dict(zip((element.name for element in elements), tuple(range(num_elements))))
+    for u in range(num_users):
+        for element_name, importance in users[u].importance.iteritems():
+            element_user_imp[element_name_index[element_name], u] = importance
+
     return [widget_element_imp, element_user_imp, element_widget_device_comp, user_device_acc,
      widget_element_size, num_users, num_devices, num_elements, num_widgets]
