@@ -1,5 +1,3 @@
-import random
-
 from properties import Properties
 from element import Element
 from widget import Widget
@@ -7,16 +5,49 @@ from device import Device
 from user import User
 import optimize_device_assignment
 
+# Temporary arguments for demo of user-specific weights
+import argparse
+parser = argparse.ArgumentParser(description='SoManyScreens')
+parser.add_argument('--alice-play-importance', type=int,
+                    help='Importance of play button to Alice.',
+                    default=5)
+args = parser.parse_args()
+
 # Define all users
-alice    = User(name='alice')
-alice.importance = {'video': 10, 'play': 5, 'next': 5, 'prev': 5, 'comments': 1}
-bob      = User(name='bob')
-bob.importance = {'video': 10, 'play': 1, 'next': 1, 'prev': 1, 'comments': 1}
+alice = User(name='alice')
+bob = User(name='bob')
 caroline = User(name='caroline')
-caroline.importance = {'video': 10, 'play': 10, 'next': 10, 'prev': 10, 'comments': 1}
-darryl   = User(name='darryl')
-darryl.importance = {'video': 1, 'play': 1, 'next': 1, 'prev': 1, 'comments': 10}
+darryl = User(name='darryl')
 users = [alice, bob, caroline, darryl]
+
+alice.importance = {
+    'video':    10,
+    'play':     args.alice_play_importance,
+    'next':     5,
+    'prev':     5,
+    'comments': 1,
+}
+bob.importance = {
+    'video':    10,
+    'play':     1,
+    'next':     1,
+    'prev':     1,
+    'comments': 1,
+}
+caroline.importance = {
+    'video':    10,
+    'play':     10,
+    'next':     10,
+    'prev':     10,
+    'comments': 1,
+}
+darryl.importance = {
+    'video':    1,
+    'play':     1,
+    'next':     1,
+    'prev':     1,
+    'comments': 10,
+}
 
 # Define all elements and widgets
 elements = [
