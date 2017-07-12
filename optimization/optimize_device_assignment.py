@@ -77,6 +77,8 @@ def optimize(elements, devices, users):
 
     # Create output list of elements (sorted)
     output = {}
+    for device in devices:
+        output[device.name] = []
     for key, var in x.items():
         if var.x != 1:  # Ignore if not 1.0 (assignment)
             continue
@@ -87,8 +89,6 @@ def optimize(elements, devices, users):
         device = devices[d]
         widget = element.widgets[w]
 
-        if device.name not in output:
-            output[device.name] = []
         output[device.name].append((element, widget))
 
     return output
