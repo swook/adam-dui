@@ -29,7 +29,7 @@ alice.importance = {
 }
 bob.importance = {
     'video':    10,
-    'play':     1,
+    'play':     2,
     'next':     1,
     'prev':     1,
     'comments': 1,

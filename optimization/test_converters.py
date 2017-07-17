@@ -25,7 +25,7 @@ alice.importance = {
 }
 bob.importance = {
     'video':    10,
-    'play':     1,
+    'play':     2,
     'next':     1,
     'prev':     1,
     'comments': 1,
@@ -220,107 +220,6 @@ devices = [
     ),
 ]
 
-web_input = '''
-    {
-      "devices": [
-        {
-          "name": "TV",
-          "capacity": 15,
-          "affordances": {
-            "visual_display": 5
-          },
-          "users": ["alice", "bob", "caroline", "darryl"]
-        },
-        {
-          "name": "Darryl's PC",
-          "capacity": 8,
-          "affordances": {
-            "visual_display": 4,
-            "text_input": 5,
-            "mouse_pointing": 5
-          },
-          "users": ["caroline", "darryl"]
-        },
-        {
-          "name": "Tablet",
-          "capacity": 4,
-          "affordances": {
-              "visual_display": 3,
-              "text_input": 3,
-              "touch_pointing": 4
-          },
-          "users": ["alice", "bob", "caroline", "darryl"]
-        },
-        {
-          "name": "Caroline's Phone",
-          "capacity": 2,
-          "affordances": {
-              "visual_display": 2,
-              "text_input": 2,
-              "touch_pointing": 3,
-              "mouse_pointing": 0
-          },
-          "users": ["caroline"]
-        },
-        {
-          "name": "Alice's Watch",
-          "capacity": 1,
-          "affordances": {
-              "visual_display": 1,
-              "text_input": 1,
-              "touch_pointing": 1,
-              "mouse_pointing": 0
-          },
-          "users": ["alice"]
-        },
-        {
-          "name": "Bob's Watch",
-          "capacity": 1,
-          "affordances": {
-              "visual_display": 1,
-              "text_input": 1,
-              "touch_pointing": 1,
-              "mouse_pointing": 0
-          },
-          "users": ["bob"]
-        },
-        {
-          "name": "Abandoned Computer",
-          "capacity": 5,
-          "affordances": {
-              "visual_display": 3,
-              "text_input": 5,
-              "touch_pointing": 0,
-              "mouse_pointing": 4
-          },
-          "users": []
-        }
-      ],
-      "elements": [
-        {
-          "name": "video",
-          "size": 10,
-          "importance": 10
-        },
-        {
-          "name": "play",
-          "size": 1,
-          "importance": 9
-        },
-        {
-          "name": "next",
-          "size": 1,
-          "importance": 2
-        },
-        {
-          "name": "prev",
-          "size": 1,
-          "importance": 2
-        }
-      ]
-    }
-'''
-
 our_inputs_json = converters.our_inputs_to_json(elements, devices, users)
 print("GENERATED JSON")
 print("==============")
@@ -339,6 +238,9 @@ for device in devices:
 print('\nUsers:')
 for user in users:
     print(user)
+
+# Make sure we don't lose information when converting between JSON and Python representations.
+assert our_inputs_json == converters.our_inputs_to_json(elements, devices, users)
 
 print('')
 print('OPTIMIZER')
