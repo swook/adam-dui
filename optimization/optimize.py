@@ -4,9 +4,9 @@ import optimize_layout
 
 
 def handle_web_input(web_input):
-    elements, devices = converters.from_web(web_input)
-    our_output = optimize(elements, devices)
-    return converters.to_web(our_output)
+    elements, devices, users = converters.json_to_our_inputs(web_input)
+    our_output = optimize(elements, devices, users)
+    return converters.our_output_to_json(our_output)
 
 '''
 
@@ -14,29 +14,19 @@ Input:
     elements (list of Element)
 
 Output:
-    dict (device_class => list of Element)
+    dict (device_class => list of {element: Element, widget: Widget})
     {
-        'tv': [Element1, Element2],
-        'phone': [Element1, Element3],
-        'watch': [Element1],
+        'tv': [{Element1, Widget}, {Element2, Widget}],
+        'phone': [{Element1, Widget}, {Element3, Widget}],
+        'watch': [{Element1, Widget}],
     }
 '''
-def optimize(elements, devices):
+def optimize(elements, devices, users):
     # Run 1st optimization
-    output = None
-    while True:
-        output = optimize_device_assignment.optimize(elements, devices)
+    output = optimize_device_assignment.optimize(elements, devices, users)
 
-        # If optimization failed, try increasing capacity of all devices by 1
-        if output is None:
-            for device in devices:
-                device.capacity += 1
-        else:
-            # We have found a solution, break this infinite loop
-            break
-
-    # Run 2nd optimization
-    for device_class, elements in output.items():
-        output[device_class] = optimize_layout.optimize(elements)
+    # # Run 2nd optimization
+    # for device_class, elements in output.items():
+    #     output[device_class] = optimize_layout.optimize(elements)
 
     return output

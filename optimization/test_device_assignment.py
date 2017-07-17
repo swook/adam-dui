@@ -241,8 +241,10 @@ for device in devices:
 print('\nOutputs')
 print('=======\n')
 
-for device_name, values in output.items():
-    print('%s <%d widget(s) assigned>' % (device_name, len(values)))
-    for element, widget in values:
+for device, values in output.items():
+    print('%s <%d widget(s) assigned>' % (device.name, len(values)))
+    for value in values:
+        element = value['element']
+        widget = value['widget']
         print('> %s: %s' % (element.name, widget))
     print('')

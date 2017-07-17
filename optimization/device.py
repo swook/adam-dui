@@ -32,9 +32,6 @@ class Device:
         assert isinstance(user, User)
         self.users.append(user)
 
-    def __repr__(self):
-        return '[Device "%s" capacity=%d]' % (self.name, self.capacity)
-
     def distance(self, widget_requirements):
         max_distance = 10
         distance = 0
@@ -48,3 +45,6 @@ class Device:
             distance += (self.affordances.mouse_pointing - widget_requirements.mouse_pointing) ** 2
 
         return max_distance - int(distance ** 0.5)
+
+    def __repr__(self):
+        return '[Device "%s" capacity=%d affordances=%s users=%s]' % (self.name, self.capacity, self.affordances, ','.join([u.name for u in self.users]))

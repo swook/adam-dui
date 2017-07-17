@@ -21,3 +21,6 @@ class Properties:
                self.text_input * other.text_input + \
                self.touch_pointing * other.touch_pointing + \
                self.mouse_pointing * other.mouse_pointing
+
+    def __repr__(self):
+        return '%d|%d|%d|%d' % (self.visual_display, self.text_input, self.touch_pointing, self.mouse_pointing)

@@ -5,9 +5,10 @@ class User(object):
     id = None
     importance = {}
 
-    def __init__(self, name=''):
+    def __init__(self, name='', id=None, importance={}):
         self.name = name
-        self.id = uuid.uuid4()  # random UUID
+        self.id = id or str(uuid.uuid4())  # random UUID
+        self.importance = importance
 
     def __repr__(self):
-        return '[User %s]' % self.name
+        return '[User %s uid=%s importance=%s]' % (self.name, self.id, self.importance)
