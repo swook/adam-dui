@@ -1,9 +1,7 @@
 from gurobipy import *
 import numpy as np
 
-
 '''
-
 Input:
     elements (list of Element)
     devices (list of Device)
@@ -99,6 +97,8 @@ def pre_process_objects(elements, devices, users):
     num_devices = len(devices)
     num_users = len(users)
     num_widgets = 3
+    # compatibility_metric = 'distance'
+    compatibility_metric = 'dot'
 
     user_device_acc = np.zeros((num_users, num_devices))
     for d in range(num_devices):
@@ -113,7 +113,12 @@ def pre_process_objects(elements, devices, users):
             widget_element_imp[w, e] = widget.visual_quality
             widget_element_size[w, e] = widget.size
             for d in range(num_devices):
-                element_widget_device_comp[e, w, d] = devices[d].calculate_compatibility(widget)
+                element_widget_device_comp[e, w, d] = devices[d].calculate_compatibility(widget, compatibility_metric)
+                print(elements[e])
+                print(widget)
+                print(devices[d])
+                print(element_widget_device_comp[e, w, d])
+                print("")
 
     element_user_imp = np.zeros((num_elements, num_users))
     element_name_index = dict(zip((element.name for element in elements), tuple(range(num_elements))))
