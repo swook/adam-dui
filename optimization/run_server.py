@@ -2,6 +2,8 @@ from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import optimize
 import json
 
+port = 8080
+
 class SimpleEcho(WebSocket):
     recv = ""
     send = ""
@@ -25,5 +27,6 @@ class SimpleEcho(WebSocket):
 
 
 
-server = SimpleWebSocketServer('', 8000, SimpleEcho)
+server = SimpleWebSocketServer('', port, SimpleEcho)
+print 'server running on port', port
 server.serveforever()
