@@ -117,11 +117,11 @@ def pre_process_objects(elements, devices, users):
             widget_element_size[w, e] = widget.size
             for d, device in enumerate(devices):
                 element_widget_device_comp[e, w, d] = device.calculate_compatibility(widget, compatibility_metric)
-                print(element)
-                print(widget)
-                print(device)
-                print(element_widget_device_comp[e, w, d])
-                print("")
+                # print(element)
+                # print(widget)
+                # print(device)
+                # print(element_widget_device_comp[e, w, d])
+                # print("")
 
     element_user_imp = np.zeros((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))

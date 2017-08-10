@@ -7,7 +7,7 @@ class Element:
     widgets = []
 
     def __init__(self, name, importance, widgets):
-        assert len(widgets) > 0
+        # assert len(widgets) > 0
         for widget in widgets:
             assert isinstance(widget, Widget)
 
