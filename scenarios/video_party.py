@@ -12,7 +12,6 @@ from common import *
 
 scenario = Scenario()
 scenario.add_users('alice', 'bob', 'caroline', 'darryl')
-scenario.adjust_user_importance('bob', 'next', +2)
 
 # Define all elements and widgets
 scenario.add_elements_from_text(
@@ -49,5 +48,16 @@ scenario.add_devices_from_text(
     Abandoned PC     |  5 | 3504 |
     '''
 )
+
+# User-specific importance values should be >= 0
+scenario.adjust_user_importance('alice', 'play', 2)
+scenario.adjust_user_importance('bob', 'next', 0)
+scenario.adjust_user_importance('bob', 'prev', 0)
+
+# These expectations will be checked when run() is called
+scenario.expect({
+    'Bob\'s Watch': ['play'],
+    'Alice\'s Watch': ['play'],
+})
 
 scenario.run()

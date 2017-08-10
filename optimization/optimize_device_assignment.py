@@ -123,7 +123,7 @@ def pre_process_objects(elements, devices, users):
                 # print(element_widget_device_comp[e, w, d])
                 # print("")
 
-    element_user_imp = np.zeros((num_elements, num_users))
+    element_user_imp = np.ones((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))
     for u, user in enumerate(users):
         for element_name, importance in user.importance.iteritems():

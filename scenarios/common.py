@@ -13,6 +13,7 @@ class Scenario(object):
         self.elements = OrderedDict()
         self.devices = OrderedDict()
         self.users = OrderedDict()
+        self.expectations = OrderedDict()
 
     def add_element(self, element):
         assert isinstance(element, Element)
@@ -67,6 +68,9 @@ class Scenario(object):
         user = self.users[user_name]
         user.importance[element_name] = value
 
+    def expect(self, device_to_elements):
+        self.expectations = device_to_elements
+
     def run(self):
         elements, devices, users = self.elements.values(), self.devices.values(), self.users.values()
         output = optimize_device_assignment.optimize(elements, devices, users)
@@ -93,6 +97,28 @@ class Scenario(object):
                 widget = value['widget']
                 print('> %s: %s' % (element.name, widget))
             print('')
+
+        # See if expectations fulfilled if specified previously
+        if len(self.expectations) > 0:
+            failure_msgs = []
+            for device_name, element_names in self.expectations.iteritems():
+                device = self.devices[device_name]
+                for element_name in element_names:
+                    element = self.elements[element_name]
+                    if element not in [v['element'] for v in output[device]]:
+                        failure_msgs += ['[FAIL] %s not assigned to %s' % (element_name, device_name)]
+
+            print('\nTESTS')
+            print('=====\n')
+            if len(failure_msgs) == 0:
+                print('Great! All expectations met.')
+            else:
+                print('%d FAILURE(S)' % len(failure_msgs))
+                for i, msg in enumerate(failure_msgs):
+                    print('(%d) %s' % (i + 1, msg))
+                print('')
+                raise Exception('Expectation(s) not met. Please check above.')
+
 
 def get_properties_from_code(code):
     nums = [int(c) for c in code.strip()]
