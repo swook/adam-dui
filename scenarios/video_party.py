@@ -1,17 +1,11 @@
 # flake8: noqa
-if __name__ == '__main__' and __package__ is None:
-    import sys
-    sys.path.insert(0, '../optimization/')
-from properties import Properties
-from element import Element
-from widget import Widget
-from device import Device
-from user import User
-
 from common import *
 
+# Create scenario object
 scenario = Scenario()
-scenario.add_users('alice', 'bob', 'caroline', 'darryl')
+
+# Add users by name
+scenario.add_users_by_names('alice', 'bob', 'caroline', 'darryl')
 
 # Define all elements and widgets
 scenario.add_elements_from_text(
@@ -23,7 +17,7 @@ scenario.add_elements_from_text(
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
     video    | 10 | 10 | 3 | 5000
-             |    |  5 | 2 | 5000
+             |    |  4 | 2 | 5000
     play     |  9 |  1 | 1 | 1023
              |    |  3 | 2 | 1043
     next     |  2 |  1 | 1 | 1023
@@ -41,7 +35,7 @@ scenario.add_devices_from_text(
     '''
     TV               | 15 | 5000 | alice,bob,caroline,darryl
     Darryl's PC      |  8 | 4505 | caroline,darryl
-    Tablet           |  4 | 3340 | alice,bob,caroline,darryl
+    Tablet           |  5 | 3340 | alice,bob,caroline,darryl
     Caroline's Phone |  2 | 2230 | caroline
     Alice's Watch    |  1 | 1110 | alice
     Bob's Watch      |  1 | 1110 | bob
@@ -49,15 +43,39 @@ scenario.add_devices_from_text(
     '''
 )
 
-# User-specific importance values should be >= 0
-scenario.adjust_user_importance('alice', 'play', 2)
-scenario.adjust_user_importance('bob', 'next', 0)
-scenario.adjust_user_importance('bob', 'prev', 0)
+##########################################################
+# 1. If Alice and Bob specifically put higher importance #
+#    on the play element, it should be shown on their    #
+#    watches.                                            #
+##########################################################
 
-# These expectations will be checked when run() is called
-scenario.expect({
+# User-specific importance values should be >= 0
+# Default is 1 for every user
+scenario.set_user_importance('alice', 'play', 2)
+scenario.set_user_importance('bob', 'play', 2)
+
+# Now run optimizer and tests
+# Specified expectations will be checked when run() is called
+scenario.run(expect={
+    'TV': ['video'],
     'Bob\'s Watch': ['play'],
     'Alice\'s Watch': ['play'],
 })
 
-scenario.run()
+
+##########################################################
+# 2. When the TV is removed, the video should be         #
+#    assigned to the Tablet and Darryl's PC.             #
+##########################################################
+
+# Remove all user-specific element importances
+scenario.reset_all_user_importances()
+
+# Remove TV
+scenario.remove_device_by_name('TV')
+
+# Now run optimizer and tests
+scenario.run(expect={
+    'Darryl\'s PC': ['video'],
+    'Tablet': ['video'],
+})
