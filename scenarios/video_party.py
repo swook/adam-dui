@@ -48,7 +48,8 @@ scenario.add_devices_from_text(
 ##########################################################
 
 # User-specific importance values should be >= 0
-# Default is 1 for every user
+# Default value is pre-defined element importance.
+# See above for element importance definitions.
 scenario.set_user_importance('bob', 'play', 1)
 
 # Now run optimizer and tests
