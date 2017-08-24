@@ -3,7 +3,6 @@ import json
 
 from user import User
 from device import Device
-from widget import Widget
 from element import Element
 from properties import Properties
 
@@ -17,14 +16,15 @@ class OurJSONEncoder(json.JSONEncoder):
     def default(self, o):
         """Overload method to add annotations for class instances."""
         if isinstance(o, Device) or isinstance(o, Element) or \
-           isinstance(o, Widget) or isinstance(o, Properties) or \
-           isinstance(o, User):
+           isinstance(o, Properties) or isinstance(o, User):
             # Add __class__ property to identify later
             out = {'__class__': o.__class__.__name__}
 
             variables = vars(o)
             for key, value in variables.iteritems():
-                if key == 'users':
+                if key[0] == '_':
+                    continue
+                elif key == 'users':
                     out[key] = [u.id for u in value]
                 elif hasattr(value, '__class__'):
                     out[key] = self.default(value)
@@ -66,9 +66,6 @@ def _our_json_decode(o):
         elif class_name == 'Device':
             o['affordances'] = _our_json_decode(o['affordances'])
             return Device(**o)
-        elif class_name == 'Widget':
-            o['requirements'] = _our_json_decode(o['requirements'])
-            return Widget(**o)
         elif class_name == 'User':
             return User(**o)
     elif isinstance(o, list):
@@ -98,13 +95,8 @@ def json_to_our_inputs(s):
 def our_output_to_json(output):
     """Convert optimizer output to JSON interpretable by frontend."""
     cleaned_output = {}
-    for device, assignments in output.items():
-        cleaned_output[device.name] = assignments
-        for i, assignment in enumerate(assignments):
-            element = assignment['element']
-            widget = assignment['widget']
-            assignment['selected_widget_index'] = element.widgets.index(widget)
-            del assignment['widget']
+    for device, elements in output.items():
+        cleaned_output[device.name] = [e.name for e in elements]
 
     return json.dumps(cleaned_output, cls=OurJSONEncoder,
                       indent=2, sort_keys=True).decode('utf-8')

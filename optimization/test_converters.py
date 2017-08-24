@@ -3,7 +3,6 @@ import optimize
 
 from user import User
 from device import Device
-from widget import Widget
 from element import Element
 from properties import Properties
 
@@ -50,92 +49,72 @@ elements = [
     Element(
         name='video',
         importance=10,
-        widgets=[
-            Widget(
-                size=10,
-                visual_quality=3,
-                requirements=Properties(
-                    visual_display=5,
-                    text_input=0,
-                    touch_pointing=0,
-                    mouse_pointing=0,
-                ),
-            ),
-        ],
+        requirements=Properties(
+            visual_display=5,
+            text_input=0,
+            touch_pointing=0,
+            mouse_pointing=0,
+        ),
+        min_width=400,
+        min_height=300,
+        max_width=3200,
+        max_height=1800,
     ),
     Element(
         name='play',
         importance=9,
-        widgets=[
-            Widget(
-                size=1,
-                visual_quality=1,
-                requirements=Properties(
-                    visual_display=1,
-                    text_input=0,
-                    touch_pointing=2,
-                    mouse_pointing=3,
-                ),
-            ),
-            Widget(
-                size=3,
-                visual_quality=2,
-                requirements=Properties(
-                    visual_display=1,
-                    text_input=0,
-                    touch_pointing=4,
-                    mouse_pointing=3,
-                ),
-            ),
-        ],
+        requirements=Properties(
+            visual_display=1,
+            text_input=0,
+            touch_pointing=2,
+            mouse_pointing=3,
+        ),
+        min_width=10,
+        min_height=10,
+        max_width=100,
+        max_height=100,
     ),
     Element(
         name='next',
         importance=2,
-        widgets=[
-            Widget(
-                size=1,
-                visual_quality=1,
-                requirements=Properties(
-                    visual_display=1,
-                    text_input=0,
-                    touch_pointing=2,
-                    mouse_pointing=3,
-                ),
-            ),
-        ],
+        requirements=Properties(
+            visual_display=1,
+            text_input=0,
+            touch_pointing=2,
+            mouse_pointing=3,
+        ),
+        min_width=10,
+        min_height=10,
+        max_width=100,
+        max_height=100,
     ),
     Element(
         name='prev',
         importance=2,
-        widgets=[
-            Widget(
-                size=1,
-                visual_quality=1,
-                requirements=Properties(
-                    visual_display=1,
-                    text_input=0,
-                    touch_pointing=2,
-                    mouse_pointing=3,
-                ),
-            ),
-        ],
+        requirements=Properties(
+            visual_display=1,
+            text_input=0,
+            touch_pointing=2,
+            mouse_pointing=3,
+        ),
+        min_width=10,
+        min_height=10,
+        max_width=100,
+        max_height=100,
     ),
     Element(
         name='comments',
         importance=5,
-        widgets=[
-            Widget(
-                size=5,
-                visual_quality=1,
-                requirements=Properties(
-                    visual_display=3,
-                    text_input=5,
-                    touch_pointing=1,
-                    mouse_pointing=3,
-                ),
-            ),
-        ],
+        requirements=Properties(
+            visual_display=3,
+            text_input=5,
+            touch_pointing=1,
+            mouse_pointing=3,
+        ),
+        min_width=160,
+        min_height=50,
+        max_width=1000,
+        max_height=2000,
     ),
 ]
 
@@ -143,7 +122,8 @@ elements = [
 devices = [
     Device(
         name='TV',
-        capacity=15,
+        width=1600,
+        height=1200,
         affordances=Properties(
             visual_display=5,
             text_input=0,
@@ -154,7 +134,8 @@ devices = [
     ),
     Device(
         name='Darryl\'s PC',
-        capacity=8,
+        width=1280,
+        height=800,
         affordances=Properties(
             visual_display=4,
             text_input=5,
@@ -165,7 +146,8 @@ devices = [
     ),
     Device(
         name='Tablet',
-        capacity=4,
+        width=1024,
+        height=800,
         affordances=Properties(
             visual_display=3,
             text_input=3,
@@ -176,7 +158,8 @@ devices = [
     ),
     Device(
         name='Caroline\'s Phone',
-        capacity=2,
+        width=400,
+        height=900,
         affordances=Properties(
             visual_display=2,
             text_input=2,
@@ -187,7 +170,8 @@ devices = [
     ),
     Device(
         name='Alice\'s Watch',
-        capacity=1,
+        width=300,
+        height=300,
         affordances=Properties(
             visual_display=1,
             text_input=1,
@@ -198,7 +182,8 @@ devices = [
     ),
     Device(
         name='Bob\'s Watch',
-        capacity=1,
+        width=300,
+        height=300,
         affordances=Properties(
             visual_display=1,
             text_input=1,
@@ -209,7 +194,8 @@ devices = [
     ),
     Device(
         name='Abandoned Computer',
-        capacity=5,
+        width=1280,
+        height=720,
         affordances=Properties(
             visual_display=3,
             text_input=5,

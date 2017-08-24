@@ -1,50 +1,58 @@
 from properties import Properties
+from element import Element
 from user import User
-from widget import Widget
 
 class Device:
 
     name = ''
-    capacity = 0
+    width = 0
+    height = 0
     affordances = {}
     users = []
 
-    def __init__(self, name, capacity, affordances, users=[]):
-        assert isinstance(capacity, int) and capacity > 0
+    def __init__(self, name, width, height, affordances, users=[]):
+        assert isinstance(width, int) and width > 0
+        assert isinstance(height, int) and height > 0
         assert affordances is not None and isinstance(affordances, Properties)
 
         self.name = name
-        self.capacity = capacity
         self.affordances = affordances
         self.users = users
 
-    def calculate_compatibility(self, widget, metric):
-        assert isinstance(widget, Widget)
+        self.width = width
+        self.height = height
+        self._area = width * height
+
+    def calculate_compatibility(self, element, metric):
+        assert isinstance(element, Element)
         if metric is 'distance':
-            return self.distance(widget.requirements)
+            return self.distance(element.requirements)
         elif metric is 'dot':
-            return self.affordances.dot(widget.requirements)
+            return self.affordances.dot(element.requirements)
 
     def has_access(self, user):
         return user in self.users
 
     def give_access(self, user):
         assert isinstance(user, User)
-        self.users.append(user)
+        if user not in self.users:
+            self.users.append(user)
 
-    def distance(self, widget_requirements):
+    def distance(self, element_requirements):
         max_distance = 10
         distance = 0
-        if widget_requirements.visual_display != 0:
-            distance += (self.affordances.visual_display - widget_requirements.visual_display) ** 2
-        if widget_requirements.text_input != 0:
-            distance += (self.affordances.text_input - widget_requirements.text_input) ** 2
-        if widget_requirements.touch_pointing != 0:
-            distance += (self.affordances.touch_pointing - widget_requirements.touch_pointing) ** 2
-        if widget_requirements.mouse_pointing != 0:
-            distance += (self.affordances.mouse_pointing - widget_requirements.mouse_pointing) ** 2
+        if element_requirements.visual_display != 0:
+            distance += (self.affordances.visual_display - element_requirements.visual_display) ** 2
+        if element_requirements.text_input != 0:
+            distance += (self.affordances.text_input - element_requirements.text_input) ** 2
+        if element_requirements.touch_pointing != 0:
+            distance += (self.affordances.touch_pointing - element_requirements.touch_pointing) ** 2
+        if element_requirements.mouse_pointing != 0:
+            distance += (self.affordances.mouse_pointing - element_requirements.mouse_pointing) ** 2
 
         return max_distance - int(distance ** 0.5)
 
     def __repr__(self):
-        return '[Device "%s" capacity=%d affordances=%s users=%s]' % (self.name, self.capacity, self.affordances, ','.join([u.name for u in self.users]))
+        return '[Device "%s" size=(%d,%d) affordances=%s users=%s]' % \
+                (self.name, self.width, self.height, self.affordances,
+                 ','.join([u.name for u in self.users]))

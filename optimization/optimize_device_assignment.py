@@ -1,71 +1,75 @@
+# flake8: noqa
 from gurobipy import *
 import numpy as np
 
-"""
-Input:
-    elements (list of Element)
-    devices (list of Device)
-    users (list of User)
 
-Output:
-    dict (device_class => list of {element: Element, widget: Widget})
-    {
-        'tv': [{Element1, Widget}, {Element2, Widget}],
-        'phone': [{Element1, Widget}, {Element3, Widget}],
-        'watch': [{Element1, Widget}],
-    }
-"""
 def optimize(elements, devices, users):
-    [widget_element_imp, element_user_imp, element_widget_device_comp, user_device_acc,
-     widget_element_size, num_users, num_devices, num_elements, num_widgets] = pre_process_objects(elements, devices, users)
+    """Perform assignment of elements to devices.
+
+    Input:
+        elements (list of Element)
+        devices (list of Device)
+        users (list of User)
+
+    Output:
+        dict (Device => list of Element)
+        {
+            Device1: [Element1, Element2],
+            Device2: [Element1, Element3],
+            Device3: [Element1],
+        }
+    """
+    element_device_imp, element_device_comp = pre_process_objects(elements, devices, users)
 
     # Create empty model
     model = Model('device_assignment')
 
     # Add decision variables
     x = {}
-    for w in range(num_widgets):
-        for e, element in enumerate(elements):
-            for d, device in enumerate(devices):
-                x[(w, e, d)] = model.addVar(vtype=GRB.BINARY, name='%i_%s_%s' % (w, element.name, device.name))
+    a = {}
+    for e, element in enumerate(elements):
+        for d, device in enumerate(devices):
+            x[e, d] = model.addVar(vtype=GRB.BINARY,
+                                   name='x_%s_%s' % (element.name, device.name))
+            a[e, d] = model.addVar(vtype=GRB.SEMIINT,
+                                   lb=element._min_area, ub=min(element._max_area, device._area),
+                                   name='w_%s_%s' % (element.name, device.name))
     model.update()
 
     for d, device in enumerate(devices):
-        # Constraint 1: sum of widgets shouldn't exceed device class capacity
-        model.addConstr(quicksum(widget_element_size[w, e] * x[(w, e, d)]
-                                 for w in range(0, num_widgets)
-                                    for e in range(0, num_elements)) <= device.capacity,
-                            'capacity_constraint_%s' % device.name)
+        # Constraint 1: sum of widget areas shouldn't exceed device capacity (area)
+        model.addConstr(quicksum(a[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
+                        'capacity_constraint_%s' % device.name)
 
-        if np.any(user_device_acc[:, d]):
+        if np.any(element_device_imp[:, d]):
             # Constraint 2: a device which is accessible by a user should have at least one widget
-            model.addConstr(quicksum(x[(w, e, d)] for w in range(0, num_widgets)
-                                                    for e in range(0, num_elements)) >= 1,
+            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
                             'at_least_one_widget_constraint_%s' % device.name)
         else:
             # Constraint 3: a device which is not accessible by any user should not have a widget
-            model.addConstr(quicksum(x[(w, e, d)] for w in range(0, num_widgets)
-                                                    for e in range(0, num_elements)) == 0,
+            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
                             'no_widget_constraint_%s' % device.name)
 
         for e, element in enumerate(elements):
-            # Constraint 4: one device should not contain multiple representations of one UI element
-            model.addConstr(quicksum(x[(w, e, d)] for w in range(0, num_widgets)) <= 1,
-                            'one_element_widget_per_device_constraint_%s_%s' % (element.name, device.name))
+            # Constraint 4: the min. width/height of an element should not exceed device width/height
+            model.addConstr(element.min_width * x[e, d] <= device.width)
+            model.addConstr(element.min_height * x[e, d] <= device.height)
 
-        for e, element in enumerate(elements):
-            for w in range(num_widgets):
-                # Constraint 5: an assigned element should be of size > 0
-                model.addConstr(widget_element_size[w, e] - x[(w, e, d)] >= 0,
-                                'assigned_widget_size_nonzero_constraint_%d_%s' % (w, element.name))
     model.update()
 
     # Objective function
-    cost = quicksum(widget_element_imp[w, e] * element_user_imp[e, u] * element_widget_device_comp[e, w, d] * user_device_acc[u, d] * x[(w, e, d)]
-                    for w in range(num_widgets)
-                        for e in range(num_elements)
-                            for d in range(num_devices)
-                                for u in range(num_users))
+    cost = 0
+    cost += quicksum(
+        element_device_imp[e, d] * element_device_comp[e, d] * x[e, d]
+        for e, _ in enumerate(elements)
+            for d, device in enumerate(devices)
+    )
+    # Try to minimize maximal area an element can take on a device.
+    cost -= quicksum(
+        (element._max_area - a[e, d]) / element._max_area * x[e, d]
+        for e, element in enumerate(elements)
+            for d, device in enumerate(devices)
+    )
     model.setObjective(cost, GRB.MAXIMIZE)
 
     # Solve
@@ -80,54 +84,51 @@ def optimize(elements, devices, users):
     for key, var in x.items():
         if var.x != 1:  # Ignore if not 1.0 (assignment)
             continue
-        w, e, d = key
-
-        # Alert if for some reason widget of size <= 0 assigned
-        assert widget_element_size[w, e] > 0
+        e, d = key
 
         element = elements[e]
         device = devices[d]
-        widget = element.widgets[w]
-        output[device].append({
-            'element': element,
-            'widget': widget,
-        })
+        output[device].append(element)
     return output
 
 
 def pre_process_objects(elements, devices, users):
-    num_elements = len(elements)
-    num_devices = len(devices)
-    num_users = len(users)
-    num_widgets = 3
     # compatibility_metric = 'distance'
     compatibility_metric = 'dot'
 
+    num_elements = len(elements)
+    num_devices = len(devices)
+    num_users = len(users)
+
+    # Retrieve and normalize element importance prior
+    element_imp = np.zeros((num_elements,))
+    for e, element in enumerate(elements):
+        element_imp[e] = element.importance
+    element_imp /= np.linalg.norm(element_imp)
+
+    # Retrieve, store and normalize user-specific element importance
+    element_user_imp = np.ones((num_elements, num_users))
+    element_name_index = dict((element.name, i) for i, element in enumerate(elements))
+    for u, user in enumerate(users):
+        element_user_imp[:, u] = element_imp
+        for element_name, importance in user.importance.iteritems():
+            element_user_imp[element_name_index[element_name], u] = importance
+        element_user_imp[:, u] /= np.linalg.norm(element_user_imp[:, u])
+
+    # Calculate and create normalized matrix of element-device compatibility
+    element_device_comp = np.zeros((num_elements, num_devices))
+    for d, device in enumerate(devices):
+        for e, element in enumerate(elements):
+            element_device_comp[e, d] = device.calculate_compatibility(element, compatibility_metric)
+        element_device_comp[:, d] /= np.linalg.norm(element_device_comp[:, d])
+
+    # Set boolean matrix of user-device access
+    # TODO: try continuous numbers
     user_device_acc = np.zeros((num_users, num_devices))
     for d, device in enumerate(devices):
         for user in device.users:
             user_device_acc[users.index(user), d] = 1
 
-    widget_element_imp = np.ones((num_widgets, num_elements)) * -1
-    widget_element_size = np.zeros((num_widgets, num_elements))
-    element_widget_device_comp = np.zeros((num_elements, num_widgets, num_devices))
-    for e, element in enumerate(elements):
-        for w, widget in enumerate(elements[e].widgets):
-            widget_element_imp[w, e] = widget.visual_quality
-            widget_element_size[w, e] = widget.size
-            for d, device in enumerate(devices):
-                element_widget_device_comp[e, w, d] = device.calculate_compatibility(widget, compatibility_metric)
-                # print(element)
-                # print(widget)
-                # print(device)
-                # print(element_widget_device_comp[e, w, d])
-                # print("")
+    element_device_imp = np.asarray(np.asmatrix(element_user_imp) * np.asmatrix(user_device_acc))
 
-    element_user_imp = np.ones((num_elements, num_users))
-    element_name_index = dict((element.name, i) for i, element in enumerate(elements))
-    for u, user in enumerate(users):
-        for element_name, importance in user.importance.iteritems():
-            element_user_imp[element_name_index[element_name], u] = importance
-
-    return [widget_element_imp, element_user_imp, element_widget_device_comp, user_device_acc,
-     widget_element_size, num_users, num_devices, num_elements, num_widgets]
+    return element_device_imp, element_device_comp
