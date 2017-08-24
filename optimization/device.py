@@ -8,16 +8,16 @@ class Device:
     width = 0
     height = 0
     affordances = {}
-    users = []
+    users = None
 
-    def __init__(self, name, width, height, affordances, users=[]):
+    def __init__(self, name, width, height, affordances, users=None):
         assert isinstance(width, int) and width > 0
         assert isinstance(height, int) and height > 0
         assert affordances is not None and isinstance(affordances, Properties)
 
         self.name = name
         self.affordances = affordances
-        self.users = users
+        self.users = users or []
 
         self.width = width
         self.height = height

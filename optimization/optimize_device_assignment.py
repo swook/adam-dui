@@ -103,17 +103,11 @@ def pre_process_objects(elements, devices, users):
     num_devices = len(devices)
     num_users = len(users)
 
-    # Retrieve and normalize element importance prior
-    element_imp = np.zeros((num_elements,))
-    for e, element in enumerate(elements):
-        element_imp[e] = element.importance
-    element_imp /= np.linalg.norm(element_imp)
-
     # Retrieve, store and normalize user-specific element importance
     element_user_imp = np.ones((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))
     for u, user in enumerate(users):
-        element_user_imp[:, u] = element_imp
+        element_user_imp[:, u] = [element.importance for element in elements]
         for element_name, importance in user.importance.iteritems():
             element_user_imp[element_name_index[element_name], u] = importance
         element_user_imp[:, u] /= np.linalg.norm(element_user_imp[:, u])
