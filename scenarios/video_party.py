@@ -49,15 +49,14 @@ scenario.add_devices_from_text(
 
 # User-specific importance values should be >= 0
 # Default is 1 for every user
-scenario.set_user_importance('alice', 'play', 2)
-scenario.set_user_importance('bob', 'play', 2)
+scenario.set_user_importance('bob', 'play', 1)
 
 # Now run optimizer and tests
 # Specified expectations will be checked when run() is called
 scenario.run(expect={
     'TV': ['video'],
     'Darryl\'s PC': ['comments'],
-    'Bob\'s Watch': ['play'],
+    'Bob\'s Watch': ['next'],
     'Alice\'s Watch': ['play'],
 })
 

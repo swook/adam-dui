@@ -72,6 +72,7 @@ class Scenario(object):
 
     def set_user_importance(self, user_name, element_name, value):
         assert element_name in self.elements.keys()
+        assert user_name in self.users.keys()
         user = self.users[user_name]
         user.importance[element_name] = value
 
