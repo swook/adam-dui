@@ -16,11 +16,11 @@ scenario.add_elements_from_text(
     #
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
-    video    | 10 | 0 | 0 | 1 | 1 | 5000
-    play     |  9 | 0 | 0 | 1 | 1 | 1023
-    next     |  2 | 0 | 0 | 1 | 1 | 1023
-    prev     |  2 | 0 | 0 | 1 | 1 | 1023
-    comments |  5 | 0 | 0 | 1 | 1 | 2511
+    video    | 10 | 500 | 300 | 2000 | 2000 | 5000
+    play     |  9 | 100 | 100 |  500 |  500 | 1023
+    next     |  2 | 100 | 100 |  500 |  500 | 1023
+    prev     |  1 | 100 | 100 |  500 |  500 | 1023
+    comments |  5 | 300 | 400 |  700 |  900 | 2511
     '''
 )
 
@@ -31,13 +31,13 @@ scenario.add_devices_from_text(
     # Properties: visual_display, text_input,
     #             touch_pointing, mouse_pointing
     '''
-    TV               | 1 | 1 | 5000 | alice,bob,caroline,darryl
-    Darryl's PC      | 1 | 1 | 4505 | caroline,darryl
-    Tablet           | 1 | 1 | 3340 | alice,bob,caroline,darryl
-    Caroline's Phone | 1 | 1 | 2230 | caroline
-    Alice's Watch    | 1 | 1 | 1110 | alice
-    Bob's Watch      | 1 | 1 | 1110 | bob
-    Abandoned PC     | 1 | 1 | 3504 |
+    TV               | 1920 | 1600 | 5000 | alice,bob,caroline,darryl
+    Darryl's PC      | 1920 | 1080 | 4505 | caroline,darryl
+    Tablet           | 1280 |  720 | 3340 | alice,bob,caroline,darryl
+    Caroline's Phone |  600 |  900 | 2230 | caroline
+    Alice's Watch    |  150 |  150 | 1110 | alice
+    Bob's Watch      |  150 |  150 | 1110 | bob
+    Abandoned PC     | 1024 |  900 | 3504 |
     '''
 )
 
@@ -56,6 +56,7 @@ scenario.set_user_importance('bob', 'play', 2)
 # Specified expectations will be checked when run() is called
 scenario.run(expect={
     'TV': ['video'],
+    'Darryl\'s PC': ['comments'],
     'Bob\'s Watch': ['play'],
     'Alice\'s Watch': ['play'],
 })
@@ -74,6 +75,6 @@ scenario.remove_device_by_name('TV')
 
 # Now run optimizer and tests
 scenario.run(expect={
-    'Darryl\'s PC': ['video'],
+    'Darryl\'s PC': ['comments'],
     'Tablet': ['video'],
 })
