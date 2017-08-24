@@ -9,37 +9,35 @@ scenario.add_users_by_names('alice', 'bob', 'caroline', 'darryl')
 
 # Define all elements and widgets
 scenario.add_elements_from_text(
-    # Name | Importance | Size | Visual Quality | Properties
+    # Name | Importance | min W | min H | max W | max H | Properties
     #
     # Properties: visual_display, text_input,
     #             touch_pointing, mouse_pointing
     #
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
-    video    | 10 | 10 | 3 | 5000
-             |    |  4 | 2 | 5000
-    play     |  9 |  1 | 1 | 1023
-             |    |  3 | 2 | 1043
-    next     |  2 |  1 | 1 | 1023
-    prev     |  2 |  1 | 1 | 1023
-    comments |  5 |  5 | 1 | 2511
+    video    | 10 | 0 | 0 | 1 | 1 | 5000
+    play     |  9 | 0 | 0 | 1 | 1 | 1023
+    next     |  2 | 0 | 0 | 1 | 1 | 1023
+    prev     |  2 | 0 | 0 | 1 | 1 | 1023
+    comments |  5 | 0 | 0 | 1 | 1 | 2511
     '''
 )
 
 # Define devices and users who can access devices
 scenario.add_devices_from_text(
-    # Name | Capacity | Properties | Users
+    # Name | Width | Height | Properties | Users
     #
     # Properties: visual_display, text_input,
     #             touch_pointing, mouse_pointing
     '''
-    TV               | 15 | 5000 | alice,bob,caroline,darryl
-    Darryl's PC      |  8 | 4505 | caroline,darryl
-    Tablet           |  5 | 3340 | alice,bob,caroline,darryl
-    Caroline's Phone |  2 | 2230 | caroline
-    Alice's Watch    |  1 | 1110 | alice
-    Bob's Watch      |  1 | 1110 | bob
-    Abandoned PC     |  5 | 3504 |
+    TV               | 1 | 1 | 5000 | alice,bob,caroline,darryl
+    Darryl's PC      | 1 | 1 | 4505 | caroline,darryl
+    Tablet           | 1 | 1 | 3340 | alice,bob,caroline,darryl
+    Caroline's Phone | 1 | 1 | 2230 | caroline
+    Alice's Watch    | 1 | 1 | 1110 | alice
+    Bob's Watch      | 1 | 1 | 1110 | bob
+    Abandoned PC     | 1 | 1 | 3504 |
     '''
 )
 

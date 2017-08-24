@@ -4,7 +4,6 @@ sys.path.insert(0, '../optimization/')
 
 from user import User
 from device import Device
-from widget import Widget
 from element import Element
 from properties import Properties
 import optimize_device_assignment
@@ -27,18 +26,11 @@ class Scenario(object):
         entries = [[entry.strip() for entry in line.split('|')] for line in lines]
         current_element = None
         for line_entries in entries:
-            if line_entries[0] > '' and line_entries[1] > '':
-                name = line_entries[0]
-                importance = int(line_entries[1])
-                current_element = Element(name, importance, widgets=[])
-                self.add_element(current_element)
-
-            # Create Widget from remaining values
-            size = int(line_entries[2])
-            visual_quality = int(line_entries[3])
-            requirements = get_properties_from_code(line_entries[4])
-            widget = Widget(size, requirements, visual_quality)
-            current_element.widgets.append(widget)
+            name = line_entries[0]
+            importance, min_w, min_h, max_w, max_h = [int(v) for v in line_entries[1:6]]
+            requirements = get_properties_from_code(line_entries[6])
+            current_element = Element(name, importance, min_w, max_w, min_h, max_h, requirements)
+            self.add_element(current_element)
 
     def add_devices_from_text(self, text):
         lines = text.split('\n')
@@ -46,16 +38,16 @@ class Scenario(object):
         entries = [[entry.strip() for entry in line.split('|')] for line in lines]
         for line_entries in entries:
             name = line_entries[0]
-            capacity = int(line_entries[1])
-            affordances = get_properties_from_code(line_entries[2])
+            width, height = [int(v) for v in line_entries[1:3]]
+            affordances = get_properties_from_code(line_entries[3])
 
             # Parse users
             users = []
-            if line_entries[3] > '':
+            if line_entries[4] > '':
                 users = [self.users[user_name.strip()]
-                         for user_name in line_entries[3].split(',')]
+                         for user_name in line_entries[4].split(',')]
 
-            self.add_device(Device(name, capacity, affordances, users))
+            self.add_device(Device(name, width, height, affordances, users))
 
     def add_device(self, device):
         assert isinstance(device, Device)
@@ -97,7 +89,6 @@ class Scenario(object):
         print('')
         for element in elements:
             print(element)
-            print('No. of widgets: %d\n' % len(element.widgets))
 
         for device in devices:
             print(device)
@@ -106,12 +97,10 @@ class Scenario(object):
         print('\nOutputs')
         print('=======\n')
 
-        for device, values in output.items():
-            print('%s <%d widget(s) assigned>' % (device.name, len(values)))
-            for value in values:
-                element = value['element']
-                widget = value['widget']
-                print('> %s: %s' % (element.name, widget))
+        for device, elements in output.items():
+            print('%s <%d element(s) assigned>' % (device.name, len(elements)))
+            for element in elements:
+                print('> %s' % element)
             print('')
 
         # See if expectations fulfilled if specified previously
@@ -125,7 +114,7 @@ class Scenario(object):
                     assert element_name in self.elements.keys()
                     element = self.elements[element_name]
 
-                    if element not in [v['element'] for v in output[device]]:
+                    if element not in [elements for elements in output[device]]:
                         failure_msgs += ['[FAIL] %s not assigned to %s' % (element_name, device_name)]
 
             print('\nTESTS')
