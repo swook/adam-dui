@@ -81,6 +81,7 @@ class Scenario(object):
             user.importance = {}
 
     def run(self, expect={}):
+        """Run optimizer and print inputs and output. Optionally run tests on outputs."""
         elements, devices, users = self.elements.values(), self.devices.values(), self.users.values()
         output = optimize_device_assignment.optimize(elements, devices, users)
 
@@ -106,27 +107,39 @@ class Scenario(object):
 
         # See if expectations fulfilled if specified previously
         if len(expect) > 0:
-            failure_msgs = []
+            msgs = []
             for device_name, element_names in expect.iteritems():
                 assert device_name in self.devices.keys()
                 device = self.devices[device_name]
 
                 for element_name in element_names:
+                    should_not = False
+                    if element_name[0] == '~':
+                        should_not = True
+                        element_name = element_name[1:]
                     assert element_name in self.elements.keys()
                     element = self.elements[element_name]
 
-                    if element not in [elements for elements in output[device]]:
-                        failure_msgs += ['[FAIL] %s not assigned to %s' % (element_name, device_name)]
+                    if not should_not:
+                        if element not in output[device]:
+                            msgs += ['[FAIL] %s should be assigned to %s.' % (element_name, device_name)]
+                        else:
+                            msgs += ['[SUCCESS] %s assigned to %s as expected.' % (element_name, device_name)]
+
+                    if should_not:
+                        if element in output[device]:
+                            msgs += ['[FAIL] %s should not be assigned to %s' % (element_name, device_name)]
+                        else:
+                            msgs += ['[SUCCESS] %s not assigned to %s as expected.' % (element_name, device_name)]
 
             print('\nTESTS')
             print('=====\n')
-            if len(failure_msgs) == 0:
-                print('Great! All expectations met.\n\n')
-            else:
-                print('%d FAILURE(S)' % len(failure_msgs))
-                for i, msg in enumerate(failure_msgs):
-                    print('(%d) %s' % (i + 1, msg))
-                print('')
+            msgs.sort()
+            for i, msg in enumerate(msgs):
+                print('(%d) %s' % (i + 1, msg))
+            print('')
+
+            if any([msg.startswith('[FAIL') for msg in msgs]):
                 raise Exception('Expectation(s) not met. Please check above.\n\n')
 
 

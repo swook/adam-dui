@@ -16,11 +16,14 @@ scenario.add_elements_from_text(
     #
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
-    video    | 10 | 500 | 300 | 2000 | 2000 | 5000
-    play     |  9 | 100 | 100 |  500 |  500 | 1023
-    next     |  2 | 100 | 100 |  500 |  500 | 1023
-    prev     |  1 | 100 | 100 |  500 |  500 | 1023
-    comments |  5 | 300 | 400 |  700 |  900 | 2511
+    video          | 10 | 500 | 300 | 2000 | 2000 | 5000
+    play           |  9 | 100 | 100 |  500 |  500 | 1023
+    next           |  3 | 100 | 100 |  500 |  500 | 1023
+    prev           |  1 | 100 | 100 |  500 |  500 | 1023
+    volume up      |  2 | 100 | 100 |  500 |  500 | 1023
+    volume down    |  2 | 100 | 100 |  500 |  500 | 1023
+    comments       |  5 | 300 | 400 |  700 | 1200 | 2524
+    related videos |  5 | 300 | 600 |  700 | 1000 | 3043
     '''
 )
 
@@ -32,12 +35,13 @@ scenario.add_devices_from_text(
     #             touch_pointing, mouse_pointing
     '''
     TV               | 1920 | 1600 | 5000 | alice,bob,caroline,darryl
-    Darryl's PC      | 1920 | 1080 | 4505 | caroline,darryl
-    Tablet           | 1280 |  720 | 3340 | alice,bob,caroline,darryl
-    Caroline's Phone |  600 |  900 | 2230 | caroline
-    Alice's Watch    |  150 |  150 | 1110 | alice
-    Bob's Watch      |  150 |  150 | 1110 | bob
-    Abandoned PC     | 1024 |  900 | 3504 |
+    PC               | 1920 | 1080 | 4505 | alice,bob,caroline,darryl
+    Tablet           | 1280 |  720 | 3250 | alice,bob,caroline,darryl
+    Alice's Phone    |  600 |  900 | 2340 | alice
+    Caroline's Phone |  600 |  900 | 2340 | caroline
+    Alice's Watch    |  150 |  150 | 1010 | alice
+    Bob's Watch      |  150 |  150 | 1010 | bob
+    Abandoned PC     | 1024 |  900 | 4505 |
     '''
 )
 
@@ -52,11 +56,13 @@ scenario.add_devices_from_text(
 # See above for element importance definitions.
 scenario.set_user_importance('bob', 'play', 1)
 
-# Now run optimizer and tests
-# Specified expectations will be checked when run() is called
+# Now run optimizer and tests.
+# Specified expectations will be checked when run() is called.
+# To test for non-assignment of elements, prepend element name
+# with ~, for example: ~comments
 scenario.run(expect={
-    'TV': ['video'],
-    'Darryl\'s PC': ['comments'],
+    'TV': ['video', '~comments'],
+    'PC': ['comments'],
     'Bob\'s Watch': ['next'],
     'Alice\'s Watch': ['play'],
 })
@@ -75,6 +81,6 @@ scenario.remove_device_by_name('TV')
 
 # Now run optimizer and tests
 scenario.run(expect={
-    'Darryl\'s PC': ['comments'],
+    'PC': ['comments'],
     'Tablet': ['video'],
 })
