@@ -63,16 +63,32 @@ def optimize(elements, devices, users):
     model.update()
 
     # Objective function
-    cost = quicksum(  # Maximize importance and compatibility
-               element_device_imp[e, d] * element_device_comp[e, d] * x[e, d]
-               for e, _ in enumerate(elements)
-                   for d, device in enumerate(devices)
-           ) \
-           - quicksum( # minimize (A_max - A) / A_max
-               (element._max_area - a[e, d]) / element._max_area * x[e, d]
-               for e, element in enumerate(elements)
-                   for d, device in enumerate(devices)
-           )
+    cost = 0
+
+    alpha = 1.0
+    beta = 1.0
+    gamma = 0.1
+
+    # Maximize importance and compatibility
+    cost += alpha * quicksum(
+                element_device_imp[e, d] * element_device_comp[e, d] * x[e, d]
+                for e, _ in enumerate(elements)
+                    for d, device in enumerate(devices)
+            )
+
+    # minimize (A_max - A) / A_max
+    cost -= beta * quicksum(
+                (element._max_area - a[e, d]) / element._max_area * x[e, d]
+                for e, element in enumerate(elements)
+                    for d, device in enumerate(devices)
+            )
+
+    # Penalty term for assigning many elements on a device
+    cost -= gamma * quicksum(x[e, d]
+                for e, element in enumerate(elements)
+                    for d, device in enumerate(devices)
+            )
+
     model.setObjective(cost, GRB.MAXIMIZE)
 
     # Solve
@@ -96,8 +112,8 @@ def optimize(elements, devices, users):
 
 
 def pre_process_objects(elements, devices, users):
-    # compatibility_metric = 'distance'
-    compatibility_metric = 'dot'
+    compatibility_metric = 'distance'
+    # compatibility_metric = 'dot'
 
     num_elements = len(elements)
     num_devices = len(devices)
