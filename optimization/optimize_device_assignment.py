@@ -19,7 +19,7 @@ def optimize(elements, devices, users):
             Device3: [Element1],
         }
     """
-    element_device_imp, element_device_comp, user_device_acc = pre_process_objects(elements, devices, users)
+    element_device_imp, user_device_acc = pre_process_objects(elements, devices, users)
 
     # Create empty model
     model = Model('device_assignment')
@@ -67,11 +67,11 @@ def optimize(elements, devices, users):
 
     alpha = 1.0
     beta = 1.0
-    gamma = 0.0
+    gamma = 0.1
 
     # Maximize importance and compatibility
     cost += alpha * quicksum(
-                element_device_imp[e, d] * element_device_comp[e, d] * x[e, d]
+                element_device_imp[e, d] * x[e, d]
                 for e, _ in enumerate(elements)
                     for d, device in enumerate(devices)
             )
@@ -112,8 +112,8 @@ def optimize(elements, devices, users):
 
 
 def pre_process_objects(elements, devices, users):
-    compatibility_metric = 'distance'
-    # compatibility_metric = 'dot'
+    # compatibility_metric = 'distance'
+    compatibility_metric = 'dot'
 
     num_elements = len(elements)
     num_devices = len(devices)
@@ -143,10 +143,10 @@ def pre_process_objects(elements, devices, users):
             user_device_acc[users.index(user), d] = 1
 
     # Normalize element importances per device
-    element_device_imp = np.asarray(np.asmatrix(element_user_imp) * np.asmatrix(user_device_acc))
+    element_device_imp = np.multiply(element_device_comp, np.asarray(np.asmatrix(element_user_imp) * np.asmatrix(user_device_acc)))
     for d, device in enumerate(devices):
         norm = np.linalg.norm(element_device_imp[:, d])
         if norm > 1e-4:
             element_device_imp[:, d] /= norm
 
-    return element_device_imp, element_device_comp, user_device_acc
+    return element_device_imp, user_device_acc
