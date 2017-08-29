@@ -22,7 +22,7 @@ scenario.add_elements_from_text(
     prev           |  1 | 100 | 100 |  500 |  500 | 1023
     volume up      |  2 | 100 | 100 |  500 |  500 | 1023
     volume down    |  2 | 100 | 100 |  500 |  500 | 1023
-    comments       |  5 | 300 | 400 |  700 | 1200 | 2524
+    comments       |  5 | 300 | 400 |  700 | 1200 | 3524
     related videos |  5 | 300 | 600 |  700 | 1000 | 3043
     '''
 )

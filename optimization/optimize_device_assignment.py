@@ -78,7 +78,7 @@ def optimize(elements, devices, users):
 
     # minimize (A_max - A) / A_max
     cost -= beta * quicksum(
-                (element._max_area - a[e, d]) / element._max_area * x[e, d]
+                (min(element._max_area, device._area) - a[e, d]) / min(element._max_area, device._area) * x[e, d]
                 for e, element in enumerate(elements)
                     for d, device in enumerate(devices)
             )
