@@ -16,7 +16,7 @@ scenario.add_elements_from_text(
     #
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
-    video          | 10 | 500 | 300 | 2000 | 2000 | 5000
+    video          | 11 | 500 | 300 | 2000 | 2000 | 5000
     play           |  9 | 100 | 100 |  500 |  500 | 1023
     next           |  3 | 100 | 100 |  500 |  500 | 1023
     prev           |  1 | 100 | 100 |  500 |  500 | 1023

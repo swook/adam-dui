@@ -67,7 +67,7 @@ def optimize(elements, devices, users):
 
     alpha = 1.0
     beta = 1.0
-    gamma = 0.1
+    gamma = 0.0
 
     # Maximize importance and compatibility
     cost += alpha * quicksum(
@@ -142,6 +142,11 @@ def pre_process_objects(elements, devices, users):
         for user in device.users:
             user_device_acc[users.index(user), d] = 1
 
+    # Normalize element importances per device
     element_device_imp = np.asarray(np.asmatrix(element_user_imp) * np.asmatrix(user_device_acc))
+    for d, device in enumerate(devices):
+        norm = np.linalg.norm(element_device_imp[:, d])
+        if norm > 1e-4:
+            element_device_imp[:, d] /= norm
 
     return element_device_imp, element_device_comp, user_device_acc
