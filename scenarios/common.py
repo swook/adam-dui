@@ -99,7 +99,7 @@ class Scenario(object):
         print('\nOutputs')
         print('=======\n')
 
-        for device, elements in sorted(output.items()):
+        for device, elements in sorted(output.items(), key=lambda x: x[0].name):
             print('%s <%d element(s) assigned>' % (device.name, len(elements)))
             for element in elements:
                 print('> %s' % element)
