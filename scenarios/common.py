@@ -99,7 +99,7 @@ class Scenario(object):
         print('\nOutputs')
         print('=======\n')
 
-        for device, elements in output.items():
+        for device, elements in sorted(output.items()):
             print('%s <%d element(s) assigned>' % (device.name, len(elements)))
             for element in elements:
                 print('> %s' % element)
@@ -122,15 +122,15 @@ class Scenario(object):
 
                     if not should_not:
                         if element not in output[device]:
-                            msgs += ['[FAIL] %s should be assigned to %s.' % (element_name, device_name)]
+                            msgs += ['[FAIL] "%s" should be assigned to "%s".' % (element_name, device_name)]
                         else:
-                            msgs += ['[SUCCESS] %s assigned to %s as expected.' % (element_name, device_name)]
+                            msgs += ['[SUCCESS] "%s" assigned to "%s" as expected.' % (element_name, device_name)]
 
                     if should_not:
                         if element in output[device]:
-                            msgs += ['[FAIL] %s should not be assigned to %s' % (element_name, device_name)]
+                            msgs += ['[FAIL] "%s" should not be assigned to "%s".' % (element_name, device_name)]
                         else:
-                            msgs += ['[SUCCESS] %s not assigned to %s as expected.' % (element_name, device_name)]
+                            msgs += ['[SUCCESS] "%s" not assigned to "%s" as expected.' % (element_name, device_name)]
 
             print('\nTESTS')
             print('=====\n')
