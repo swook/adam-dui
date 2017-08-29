@@ -67,7 +67,7 @@ def optimize(elements, devices, users):
 
     alpha = 1.0
     beta = 1.0
-    gamma = 0.1
+    gamma = 0.0
 
     # Maximize importance and compatibility
     cost += alpha * quicksum(

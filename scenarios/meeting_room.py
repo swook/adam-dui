@@ -75,6 +75,6 @@ scenario.run(expect={
     'Phone (employee)': ['Facebook', 'Colour Picker'],
     'Phone (intern)': ['Colour Picker'],
     'Watch (secretary)': ['Colour Picker'],
-    'Watch (chair)': ['Time', 'Colour Picker'],
+    'Watch (chair)': ['Time'],
 })
 
