@@ -1,3 +1,5 @@
+import json
+
 import converters
 import optimize
 
@@ -211,10 +213,16 @@ print("GENERATED JSON")
 print("==============")
 print(our_inputs_json)
 
+# Add token for Roman
+token = 'something'
+intermediate= json.loads(our_inputs_json)
+intermediate['token'] = token
+our_inputs_json = json.dumps(intermediate, indent=2, sort_keys=True)
+
 print('')
 print('RECOVERED FROM JSON')
 print('===================')
-elements, devices, users = converters.json_to_our_inputs(our_inputs_json)
+elements, devices, users, token = converters.json_to_our_inputs(our_inputs_json)
 print('Elements:')
 for element in elements:
     print(element)
@@ -226,7 +234,7 @@ for user in users:
     print(user)
 
 # Make sure we don't lose information when converting between JSON and Python representations.
-assert our_inputs_json == converters.our_inputs_to_json(elements, devices, users)
+assert our_inputs_json == converters.our_inputs_to_json(elements, devices, users, token=token)
 
 print('')
 print('OPTIMIZER')

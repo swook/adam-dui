@@ -46,10 +46,10 @@ class OurJSONEncoder(json.JSONEncoder):
             return o
 
 
-def our_inputs_to_json(elements, devices, users):
+def our_inputs_to_json(elements, devices, users, token=''):
     """Convert optimization problem specification to JSON."""
     return json.dumps(
-        {'elements': elements, 'devices': devices, 'users': users},
+        {'token': token, 'elements': elements, 'devices': devices, 'users': users},
         cls=OurJSONEncoder, indent=2, sort_keys=True).decode('utf-8')
 
 
@@ -85,18 +85,19 @@ def json_to_our_inputs(s):
     devices = out['devices']
     elements = out['elements']
     users = out['users']
+    token = out['token']
     user_id_to_device = dict((u.id, u) for u in users)
     for device in devices:
         device.users = [user_id_to_device[uid] for uid in device.users]
 
-    return elements, devices, users
+    return elements, devices, users, token
 
 
-def our_output_to_json(output):
+def our_output_to_json(output, token=''):
     """Convert optimizer output to JSON interpretable by frontend."""
-    cleaned_output = {}
+    cleaned_output = {'token': token, 'result': {}}
     for device, elements in output.items():
-        cleaned_output[device.name] = [e.name for e in elements]
+        cleaned_output['result'][device.name] = [e.name for e in elements]
 
     return json.dumps(cleaned_output, cls=OurJSONEncoder,
                       indent=2, sort_keys=True).decode('utf-8')

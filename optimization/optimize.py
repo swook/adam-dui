@@ -4,9 +4,9 @@ import optimize_layout
 
 
 def handle_web_input(web_input):
-    elements, devices, users = converters.json_to_our_inputs(web_input)
+    elements, devices, users, token = converters.json_to_our_inputs(web_input)
     our_output = optimize(elements, devices, users)
-    return converters.our_output_to_json(our_output)
+    return converters.our_output_to_json(our_output, token=token)
 
 '''
 
