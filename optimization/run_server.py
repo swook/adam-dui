@@ -39,7 +39,7 @@ class SimpleEcho(WebSocket):
         logger.info('%s:%d disconnected.' % self.address)
 
 
-port = 8001
+port = 8000
 logger.info('Starting backend at port %d' % port)
 server = SimpleWebSocketServer('', port, SimpleEcho)
 server.serveforever()
