@@ -49,7 +49,14 @@ class OurJSONEncoder(json.JSONEncoder):
 def our_inputs_to_json(elements, devices, users, token=''):
     """Convert optimization problem specification to JSON."""
     return json.dumps(
-        {'token': token, 'elements': elements, 'devices': devices, 'users': users},
+        {
+            'token': token,
+            'data': {
+                'elements': elements,
+                'devices': devices,
+                'users': users
+            },
+        },
         cls=OurJSONEncoder, indent=2, sort_keys=True).decode('utf-8')
 
 
@@ -82,10 +89,10 @@ def json_to_our_inputs(s):
     out = json.loads(s, object_hook=_our_json_decode)
 
     # Fix Device.users lists which is originally just UIDs
-    devices = out['devices']
-    elements = out['elements']
-    users = out['users']
     token = out['token']
+    devices = out['data']['devices']
+    elements = out['data']['elements']
+    users = out['data']['users']
     user_id_to_device = dict((u.id, u) for u in users)
     for device in devices:
         device.users = [user_id_to_device[uid] for uid in device.users]
@@ -95,9 +102,9 @@ def json_to_our_inputs(s):
 
 def our_output_to_json(output, token=''):
     """Convert optimizer output to JSON interpretable by frontend."""
-    cleaned_output = {'token': token, 'result': {}}
+    cleaned_output = {'token': token, 'data': {}}
     for device, elements in output.items():
-        cleaned_output['result'][device.name] = [e.name for e in elements]
+        cleaned_output['data'][device.name] = [e.name for e in elements]
 
     return json.dumps(cleaned_output, cls=OurJSONEncoder,
                       indent=2, sort_keys=True).decode('utf-8')
