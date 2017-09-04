@@ -26,10 +26,13 @@ class SimpleEcho(WebSocket):
         except:
             tb = traceback.format_exc()
             logger.debug('\n%s\n' % tb)
-            self.sendMessage('{"error": "%s"}' % tb)
+            self.sendMessage(json.dumps({
+                'error': tb,
+                'token': json_request['token'],
+            }).decode('utf-8'))
 
     def handleMessage(self):
-        logger.debug('\nReceived data from client:\n%s\n' % self.data)
+        # logger.debug('\nReceived data from client:\n%s\n' % self.data)
         self.optimize()
 
     def handleConnected(self):
