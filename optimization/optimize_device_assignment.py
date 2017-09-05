@@ -91,15 +91,17 @@ def optimize(elements, devices, users):
 
     model.setObjective(cost, GRB.MAXIMIZE)
 
-    # Solve
-    model.optimize()
-    if model.status != GRB.status.OPTIMAL:
-        return None
-
     # Create output list of elements (sorted)
     output = {}
     for device in devices:
         output[device] = []
+
+    # Solve
+    model.optimize()
+    if model.status != GRB.status.OPTIMAL:
+        return output
+
+    # Fill output with optimizer result
     for key, var in x.items():
         if var.x != 1:  # Ignore if not 1.0 (assignment)
             continue
