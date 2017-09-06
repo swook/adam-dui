@@ -24,6 +24,7 @@ def optimize(elements, devices, users):
 
     # Create empty model
     model = Model('device_assignment')
+    model.params.LogToConsole = 0  # Uncomment to see logs in console
 
     # Add decision variables
     x = {}
@@ -64,6 +65,14 @@ def optimize(elements, devices, users):
 
     model.update()
 
+    # Do not assign zero-compatibility elements
+    for d, device in enumerate(devices):
+        for e, element in enumerate(elements):
+            if element_device_comp[e, d] < 1e-4:
+                model.addConstr(x[e, d] == 0,
+                                name='zero_compatibility_%s_%s' % (element.name, device.name))
+    model.update()
+
     # Make sure element privacy is respected.
     # All users must have access to a device as well as assigned elements.
     # That is, if there is even one user who is not authorised to view an element, the element
@@ -72,7 +81,8 @@ def optimize(elements, devices, users):
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             if np.any(user_device_access[:, d] > user_element_access[:, e]):
-                model.addConstr(x[e, d] == 0)
+                model.addConstr(x[e, d] == 0,
+                                name='privacy_%s_%s' % (element.name, device.name))
             else:
                 element_device_access[e, d] = 1
 

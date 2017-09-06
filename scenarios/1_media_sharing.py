@@ -1,22 +1,27 @@
 # flake8: noqa
 from common import *
 
+# Name | Importance | min W | min H | max W | max H | Properties
+# Properties: visual_display, text_input, touch_pointing, mouse_pointing
 element_definitions = {
-    'video':             'video             | 15 | 500 | 300 | 2000 | 2000 | 5000',
-    'playback controls': 'playback controls |  9 | 150 | 100 |  800 |  500 | 1023',
-    'volume controls':   'volume controls   |  2 | 150 | 100 |  800 |  500 | 1023',
-    'comments':          'comments          |  5 | 300 | 400 |  700 | 1200 | 1524',
-    'suggestions':       'suggestions       |  5 | 300 | 600 |  700 | 1000 | 3043',
+    'video':             'video             | 10 | 500 | 300 | 2600 | 2000 | 5000',
+    'playback controls': 'playback controls |  6 | 150 | 100 |  500 |  300 | 0032',
+    'suggestions':       'suggestions       |  5 | 300 | 600 | 1000 | 1000 | 3054',
+    'comments':          'comments          |  4 | 300 | 400 |  800 | 1500 | 1500',
+    'volume controls':   'volume controls   |  2 | 150 | 100 |  500 |  300 | 0032',
 }
+# Name | Width | Height | Properties | Users
+# Properties: visual_display, text_input, touch_pointing, mouse_pointing
 device_definitions = {
-    'TV':               'TV               | 1920 | 1600 | 5000 | alice,bob,caroline,darryl',
-    'PC':               'PC               | 1920 | 1080 | 4505 | alice,bob,caroline,darryl',
-    'Tablet':           'Tablet           | 1280 |  720 | 4250 | alice,bob,caroline,darryl',
-    'Phone (Alice)':    'Phone (Alice)    |  600 |  900 | 2340 | alice',
-    'Phone (Caroline)': 'Phone (Caroline) |  600 |  900 | 2340 | caroline',
-    'Watch (Alice)':    'Watch (Alice)    |  150 |  150 | 1010 | alice',
-    'Watch (Bob)':      'Watch (Bob)      |  150 |  150 | 1010 | bob',
-    'Abandoned PC':     'Abandoned PC     | 1024 |  900 | 4505 |',
+    'TV':               'TV               | 2600 | 1600 | 5000 | alice,bob,caroline,darryl',
+    'PC':               'PC               | 1920 | 1080 | 3505 | alice,bob,caroline,darryl',
+    'Laptop':           'Laptop           | 1280 |  800 | 3503 | alice,bob,caroline,darryl',
+    'Tablet':           'Tablet           | 1280 |  720 | 1250 | alice,bob,caroline,darryl',
+    'Phone (Alice)':    'Phone (Alice)    |  600 |  900 | 0330 | alice',
+    'Phone (Caroline)': 'Phone (Caroline) |  600 |  900 | 0330 | caroline',
+    'Watch (Alice)':    'Watch (Alice)    |  150 |  150 | 0020 | alice',
+    'Watch (Bob)':      'Watch (Bob)      |  150 |  150 | 0020 | bob',
+    'Abandoned PC':     'Abandoned PC     | 1024 |  900 | 3505 |',
 }
 def init():
     scenario = Scenario()
@@ -71,7 +76,7 @@ scenario.add_elements_from_text(pick(element_definitions,
 scenario.add_devices_from_text(pick(device_definitions,
     ['PC']))
 scenario.run(expect={
-    'PC': ['video', 'comments', 'playback controls'],
+    'PC': ['video', 'playback controls'],
 })
 
 
@@ -82,10 +87,29 @@ scenario.run(expect={
 ###########
 scenario = init()
 scenario.add_elements_from_text(pick(element_definitions,
-    ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
+    ['video', 'playback controls', 'volume controls', 'comments']))
 scenario.add_devices_from_text(pick(device_definitions,
     ['TV', 'PC']))
 scenario.run(expect={
     'TV': ['~comments'],
     'PC': ['comments'],
+})
+
+
+#########
+# TEST 5: With all devices and elements, we expect the "video" to be on the TV,
+#         "comments" on the PC, and "playback controls" on all phones.
+# Keywords: Element Compatibility
+###########
+scenario = init()
+scenario.add_elements_from_text(pick(element_definitions,
+    ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
+scenario.add_devices_from_text(pick(device_definitions,
+    ['TV', 'PC', 'Tablet', 'Phone (Alice)', 'Phone (Caroline)', 'Watch (Alice)', 'Watch (Bob)']))
+scenario.run(expect={
+    'TV':               ['video'],
+    'PC':               ['comments'],
+    'Tablet':           ['suggestions'],
+    'Phone (Alice)':    ['playback controls'],
+    'Phone (Caroline)': ['playback controls'],
 })
