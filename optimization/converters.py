@@ -95,7 +95,8 @@ def json_to_our_inputs(s):
     users = out['data']['users']
     user_id_to_device = dict((u.id, u) for u in users)
     for device in devices:
-        device.users = [user_id_to_device[uid] for uid in device.users]
+        device.users = [user_id_to_device[uid] for uid in device.users
+                        if uid in user_id_to_device.keys()]
 
     return elements, devices, users, token
 
