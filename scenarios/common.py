@@ -11,8 +11,9 @@ import optimize_device_assignment
 
 class Scenario(object):
 
-    def __init__(self):
+    def __init__(self, name=''):
         from collections import OrderedDict
+        self.name = name
         self.elements = OrderedDict()
         self.devices = OrderedDict()
         self.users = OrderedDict()
@@ -138,17 +139,33 @@ class Scenario(object):
                         else:
                             msgs += ['[SUCCESS] "%s" not assigned to "%s" as expected.' % (element_name, device_name)]
 
+            msgs.sort()
+            global all_test_results
+            all_test_results.append((self.name, msgs))
+
             print('\nTESTS')
             print('=====\n')
-            msgs.sort()
             for i, msg in enumerate(msgs):
                 print('(%d) %s' % (i + 1, msg))
             print('')
-
-            if any([msg.startswith('[FAIL') for msg in msgs]):
-                raise Exception('Expectation(s) not met. Please check above.\n\n')
 
 
 def get_properties_from_code(code):
     nums = [int(c) for c in code.strip()]
     return Properties(*nums)
+
+all_test_results = []
+def check_previous_tests_for_failure():
+    print('\nALL TESTS')
+    print('=========\n')
+    for name, msgs in all_test_results:
+        print(name)
+        for i, msg in enumerate(msgs):
+            print('(%d) %s' % (i + 1, msg))
+        print('')
+
+    # If any failures, raise Exception
+    for _, msgs in all_test_results:
+        for msg in msgs:
+            if msg.startswith('[FAIL'):
+                raise Exception('Expectation(s) not met. Please check above.\n\n')

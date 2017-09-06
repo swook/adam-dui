@@ -23,8 +23,8 @@ device_definitions = {
     'Watch (Bob)':      'Watch (Bob)      |  150 |  150 | 0020 | bob',
     'Abandoned PC':     'Abandoned PC     | 1024 |  900 | 3505 |',
 }
-def init():
-    scenario = Scenario()
+def init(test_name):
+    scenario = Scenario(test_name)
     scenario.add_users_by_names('alice', 'bob', 'caroline', 'darryl')
     return scenario
 def pick(definitions, keys):
@@ -35,7 +35,7 @@ def pick(definitions, keys):
 #         should have none of the elements assigned.
 # Keywords: User Access
 ###########
-scenario = init()
+scenario = init('Abandoned PC should have no elements.')
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
 scenario.add_devices_from_text(pick(device_definitions,
@@ -50,7 +50,7 @@ scenario.run(expect={
 #         "alice", it should not be accessible by other users.
 # Keywords: Element Privacy, User Access
 ###########
-scenario = init()
+scenario = init('Private "playback controls" should not be accessible by other users.')
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
 scenario.elements['playback controls'].user_give_access(scenario.users['alice'])
@@ -70,13 +70,13 @@ scenario.run(expect={
 #         should be assigned to it.
 # Keywords: Element Diversity
 ###########
-scenario = init()
+scenario = init('With only a laptop available, most important elements should be assigned.')
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
 scenario.add_devices_from_text(pick(device_definitions,
     ['PC']))
 scenario.run(expect={
-    'PC': ['video', 'playback controls'],
+    'PC': ['video', 'playback controls', 'suggestions'],
 })
 
 
@@ -85,7 +85,7 @@ scenario.run(expect={
 #         appear on the PC.
 # Keywords: Element Compatibility
 ###########
-scenario = init()
+scenario = init('If both TV and PC available, comments should only be on PC.')
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments']))
 scenario.add_devices_from_text(pick(device_definitions,
@@ -101,7 +101,7 @@ scenario.run(expect={
 #         "comments" on the PC, and "playback controls" on all phones.
 # Keywords: Element Compatibility
 ###########
-scenario = init()
+scenario = init('Various compatibilities.')
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
 scenario.add_devices_from_text(pick(device_definitions,
@@ -112,4 +112,8 @@ scenario.run(expect={
     'Tablet':           ['suggestions'],
     'Phone (Alice)':    ['playback controls'],
     'Phone (Caroline)': ['playback controls'],
+    'Watch (Alice)':    ['playback controls'],
+    'Watch (Bob)':      ['playback controls'],
 })
+
+check_previous_tests_for_failure()
