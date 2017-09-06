@@ -31,6 +31,11 @@ class Scenario(object):
             importance, min_w, min_h, max_w, max_h = [int(v) for v in line_entries[1:6]]
             requirements = get_properties_from_code(line_entries[6])
             current_element = Element(name, importance, min_w, max_w, min_h, max_h, requirements)
+            if len(line_entries) > 7:
+                users = []
+                if line_entries[7] > '':
+                    users = [self.users[user_name.strip()] for user_name in line_entries[7].split(',')]
+                    current_element.user_give_access(users)
             self.add_element(current_element)
 
     def add_devices_from_text(self, text):

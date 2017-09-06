@@ -22,7 +22,7 @@ scenario.add_elements_from_text(
     prev           |  1 | 100 | 100 |  500 |  500 | 1023
     volume up      |  2 | 100 | 100 |  500 |  500 | 1023
     volume down    |  2 | 100 | 100 |  500 |  500 | 1023
-    comments       |  5 | 300 | 400 |  700 | 1200 | 3524
+    comments       |  5 | 300 | 400 |  700 | 1200 | 1524
     related videos |  5 | 300 | 600 |  700 | 1000 | 3043
     '''
 )
@@ -36,7 +36,7 @@ scenario.add_devices_from_text(
     '''
     TV               | 1920 | 1600 | 5000 | alice,bob,caroline,darryl
     PC               | 1920 | 1080 | 4505 | alice,bob,caroline,darryl
-    Tablet           | 1280 |  720 | 3250 | alice,bob,caroline,darryl
+    Tablet           | 1280 |  720 | 4250 | alice,bob,caroline,darryl
     Alice's Phone    |  600 |  900 | 2340 | alice
     Caroline's Phone |  600 |  900 | 2340 | caroline
     Alice's Watch    |  150 |  150 | 1010 | alice
