@@ -1,4 +1,5 @@
 # flake8: noqa
+import math
 import sys
 sys.path.insert(0, '../optimization/')
 
@@ -102,7 +103,7 @@ class Scenario(object):
         for device, elements in sorted(output.items(), key=lambda x: x[0].name):
             print('%s <%d element(s) assigned>' % (device.name, len(elements)))
             for element in elements:
-                print('> %s' % element)
+                print('> %s (s: %d)' % (element, math.sqrt(element._optimizer_size)))
             print('')
 
         # See if expectations fulfilled if specified previously

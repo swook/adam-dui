@@ -26,27 +26,27 @@ def optimize(elements, devices, users):
 
     # Add decision variables
     x = {}
-    a = {}
+    s = {}
     for e, element in enumerate(elements):
         for d, device in enumerate(devices):
             x[e, d] = model.addVar(vtype=GRB.BINARY,
                                    name='x_%s_%s' % (element.name, device.name))
-            a[e, d] = model.addVar(vtype=GRB.SEMIINT,
+            s[e, d] = model.addVar(vtype=GRB.SEMIINT,
                                    lb=element._min_area, ub=min(element._max_area, device._area),
-                                   name='a_%s_%s' % (element.name, device.name))
+                                   name='s_%s_%s' % (element.name, device.name))
     model.update()
 
     for d, device in enumerate(devices):
         # Constraint 1: sum of widget areas shouldn't exceed device capacity (area)
-        model.addConstr(quicksum(a[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
+        model.addConstr(quicksum(s[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
         if np.any(user_device_acc[:, d]):
-            # Constraint 2: a device which is accessible by a user should have at least one widget
+            # Constraint 2: a device which is accessible by a user should have at least one element
             model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
                             'at_least_one_widget_constraint_%s' % device.name)
         else:
-            # Constraint 3: a device which is not accessible by any user should not have a widget
+            # Constraint 3: a device which is not accessible by any user should not have a element
             model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
                             'no_widget_constraint_%s' % device.name)
 
@@ -57,8 +57,8 @@ def optimize(elements, devices, users):
             model.addConstr(element.min_height * x[e, d] <= device.height,
                             'min_height_exceed_constraint_%s_on_%s' % (element.name, device.name))
 
-            # Constraint 5: Set a to zero if x is zero
-            model.addGenConstrIndicator(x[e, d], False, a[e, d] == 0)
+            # Constraint 5: Set s to zero if x is zero
+            model.addGenConstrIndicator(x[e, d], False, s[e, d] == 0)
 
     model.update()
 
@@ -78,7 +78,7 @@ def optimize(elements, devices, users):
 
     # minimize (A_max - A) / A_max
     cost -= beta * quicksum(
-                (min(element._max_area, device._area) - a[e, d]) / min(element._max_area, device._area) * x[e, d]
+                (min(element._max_area, device._area) - s[e, d]) / min(element._max_area, device._area) * x[e, d]
                 for e, element in enumerate(elements)
                     for d, device in enumerate(devices)
             )
@@ -109,6 +109,7 @@ def optimize(elements, devices, users):
 
         element = elements[e]
         device = devices[d]
+        element._optimizer_size = s[e, d].x
         output[device].append(element)
     return output
 
