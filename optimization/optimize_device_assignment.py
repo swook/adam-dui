@@ -115,6 +115,8 @@ def optimize(elements, devices, users):
                                     for e, element in enumerate(elements)))
 
         # Number of "redundant" element assignments (duplicates)
+        # NOTE: weighted by inverse element-user importance,
+        #       that is, more important elements can be repeated
         user_num_replicated_elements[u] = model.addVar(vtype=GRB.CONTINUOUS)
         model.addConstr(user_num_replicated_elements[u]
                         == float(1. - element_user_imp[e, u]) * (user_num_element[u, e] - element_assigned_to_user[e, u]))
@@ -220,10 +222,6 @@ def pre_process_objects(elements, devices, users):
     num_devices = len(devices)
     num_users = len(users)
 
-    # Add noise to prevent stalemates
-    def add_noise(array):
-        array += 1e-6 * np.random.random(size=array.shape)
-
     # Retrieve, store and normalize user-specific element importance
     element_user_imp = np.ones((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))
@@ -231,8 +229,11 @@ def pre_process_objects(elements, devices, users):
         element_user_imp[:, u] = [element.importance for element in elements]
         for element_name, importance in user.importance.iteritems():
             element_user_imp[element_name_index[element_name], u] = importance
-        element_user_imp[:, u] /= np.linalg.norm(element_user_imp[:, u])
-    add_noise(element_user_imp)
+
+    for u, user in enumerate(users):
+        norm = np.linalg.norm(element_user_imp[:, u])
+        if norm > 0.0:
+            element_user_imp[:, u] /= norm
 
     # Calculate and create normalized matrix of element-device compatibility
     element_device_comp = np.zeros((num_elements, num_devices))
@@ -240,7 +241,6 @@ def pre_process_objects(elements, devices, users):
         for e, element in enumerate(elements):
             element_device_comp[e, d] = device.calculate_compatibility(element, compatibility_metric)
         element_device_comp[:, d] /= np.linalg.norm(element_device_comp[:, d])
-    add_noise(element_device_comp)
 
     # Set boolean matrix of user-device access
     # TODO: try continuous numbers
@@ -250,10 +250,12 @@ def pre_process_objects(elements, devices, users):
             user_device_access[users.index(user), d] = 1
 
     # Set boolean matrix of user-element access
-    user_element_access = np.empty((num_users, num_elements))
+    user_element_access = np.zeros((num_users, num_elements))
     for e, element in enumerate(elements):
         for u, user in enumerate(users):
-            user_element_access[u, e] = 1 if element.user_has_access(user) else 0
+            # NOTE: we set access to False if importance 0
+            if element.user_has_access(user) and element_user_imp[e, u] > 0.0:
+                user_element_access[u, e] = 1
 
     # Normalize element importances per device
     element_device_imp = np.asmatrix(element_user_imp) * np.asmatrix(user_device_access)
@@ -261,6 +263,12 @@ def pre_process_objects(elements, devices, users):
         norm = np.linalg.norm(element_device_imp[:, d])
         if norm > 0.0:
             element_device_imp[:, d] /= norm
+
+    # Add noise to prevent stalemates
+    def add_noise(array):
+        array += 1e-6 * np.random.random(size=array.shape)
+    add_noise(element_device_comp)
+    add_noise(element_user_imp)
 
     return element_user_imp, element_device_imp, element_device_comp, user_device_access, \
            user_element_access
