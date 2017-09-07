@@ -201,7 +201,9 @@ def optimize(elements, devices, users):
 
         element = elements[e]
         device = devices[d]
-        element._optimizer_size = s[e, d].x
+        if not hasattr(element, '_optimizer_size'):
+            element._optimizer_size = {}
+        element._optimizer_size[device.name] = s[e, d].x
         output[device].append(element)
     return output
 

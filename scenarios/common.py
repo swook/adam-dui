@@ -109,7 +109,7 @@ class Scenario(object):
         for device, elements in sorted(output.items(), key=lambda x: x[0].name):
             print('%s <%d element(s) assigned>' % (device.name, len(elements)))
             for element in elements:
-                print('> %s (s: %d)' % (element, math.sqrt(element._optimizer_size)))
+                print('> %s (s: %d)' % (element, math.sqrt(element._optimizer_size[device.name])))
             print('')
 
         # See if expectations fulfilled if specified previously
