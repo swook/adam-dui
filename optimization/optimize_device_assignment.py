@@ -86,19 +86,11 @@ def optimize(elements, devices, users):
     model.update()
 
     # Diversity variables and constraints
-    user_num_all_elements = {}
     user_num_unique_elements = {}
     user_num_element = {}
     user_num_replicated_elements = {}
     element_assigned_to_user = {}
     for u, user in enumerate(users):
-        # Total number of elements that a user has access to (incl. duplicates)
-        user_num_all_elements[u] = model.addVar(vtype=GRB.SEMIINT)
-        model.addConstr(user_num_all_elements[u]
-                        == quicksum(x[e, d] * user_device_access[u, d]
-                                    for e, element in enumerate(elements)
-                                       for d, device in enumerate(devices)))
-
         for e, element in enumerate(elements):
             # The number of a particular element a user has assigned
             user_num_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
