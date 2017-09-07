@@ -42,14 +42,19 @@ def optimize(elements, devices, users):
         model.addConstr(quicksum(s[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
-        # if np.any(user_device_access[:, d]):
-        #     # Constraint 2: a device which is accessible by a user should have at least one element
-        #     model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
-        #                     'at_least_one_widget_constraint_%s' % device.name)
-        # else:
-        #     # Constraint 3: a device which is not accessible by any user should not have a element
-        #     model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
-        #                     'no_widget_constraint_%s' % device.name)
+        if np.any(user_device_access[:, d]):
+            # Constraint 2: a device which is accessible by a user should have at least one element
+            min_size_check = np.zeros((len(elements), 1))
+            for e, element in enumerate(elements):
+                min_size_check[e] = device.width >= element.min_width and \
+                                    device.height >= element.min_height
+            if np.any(min_size_check):
+                model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
+                                'at_least_one_widget_constraint_%s' % device.name)
+        else:
+            # Constraint 3: a device which is not accessible by any user should not have a element
+            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
+                            'no_element_constraint_%s' % device.name)
 
         for e, element in enumerate(elements):
             # Constraint 4: the min. width/height of an element should not exceed device width/height
@@ -63,14 +68,6 @@ def optimize(elements, devices, users):
             model.addGenConstrIndicator(x[e, d], True, s[e, d] >= element._min_area)
             model.addGenConstrIndicator(x[e, d], True, s[e, d] <= min(element._max_area, device._area))
 
-    model.update()
-
-    # Do not assign zero-compatibility elements
-    for d, device in enumerate(devices):
-        for e, element in enumerate(elements):
-            if element_device_comp[e, d] < 1e-4:
-                model.addConstr(x[e, d] == 0,
-                                name='zero_compatibility_%s_%s' % (element.name, device.name))
     model.update()
 
     # Make sure element privacy is respected.
@@ -118,45 +115,77 @@ def optimize(elements, devices, users):
                                     for e, element in enumerate(elements)))
 
         # Number of "redundant" element assignments (duplicates)
-        user_num_replicated_elements[u] = model.addVar(vtype=GRB.SEMIINT)
+        user_num_replicated_elements[u] = model.addVar(vtype=GRB.CONTINUOUS)
         model.addConstr(user_num_replicated_elements[u]
-                        == user_num_all_elements[u] - user_num_unique_elements[u])
+                        == float(1. - element_user_imp[e, u]) * (user_num_element[u, e] - element_assigned_to_user[e, u]))
+
+    model.update()
+
+    # Variables to penalize assigning too many elements on a device
+    max_elements_per_device_guideline = 3
+    device_num_elements = {}
+    device_num_elements_sub_our_max = {}
+    device_num_elements_over_max = {}
+    for d, device in enumerate(devices):
+        for e, element in enumerate(elements):
+            device_num_elements[d] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
+            device_num_elements_sub_our_max[d] = model.addVar(vtype=GRB.INTEGER,
+                                                              lb=-len(elements), ub=len(elements))
+            device_num_elements_over_max[d] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
+
+            model.addConstr(device_num_elements[d]
+                            == quicksum(x[e, d] for e, element in enumerate(elements)))
+            model.addConstr(device_num_elements_sub_our_max[d]
+                            == device_num_elements[d] - max_elements_per_device_guideline)
+            model.addGenConstrMax(device_num_elements_over_max[d],
+                                  [device_num_elements_sub_our_max[d], 0])
 
     model.update()
 
     # Objective function
     cost = 0
 
-    alpha = 1.3
-    beta = 1.0
-    gamma = 0.01
-    delta = 0.1
-    max_elements_per_device_guideline = 2
+    alpha1 = 0.30
+    alpha2 = 0.25
+    beta   = 0.30
+    gamma  = 0.10
+    delta  = 0.05
+    assert alpha1 + alpha2 + beta + gamma + delta == 1.0
 
-    # Maximize importance and compatibility
-    cost += alpha * quicksum(
-                element_device_imp[e, d] * element_device_comp[e, d] * element_device_access[e, d] * x[e, d]
+    # Maximize importance in assignment
+    cost += alpha1 * quicksum(
+                element_device_imp[e, d] * element_device_access[e, d] * x[e, d]
                 for e, _ in enumerate(elements)
                     for d, device in enumerate(devices)
-            )
+            ) / (len(elements) * len(devices))
 
-    # minimize (A_max - A) / A_max
+    # Maximize compatibility in assignment
+    cost += alpha2 * quicksum(
+                element_device_comp[e, d] * element_device_access[e, d] * x[e, d]
+                for e, _ in enumerate(elements)
+                    for d, device in enumerate(devices)
+            ) / (len(elements) * len(devices))
+
+    # Minimize (A_max - A) / A_max scaled by importance
     cost -= beta * quicksum(
-                float(element_device_imp[e, d] * element_device_comp[e, d] * element_device_access[e, d])
+                float(element_device_imp[e, d] * element_device_access[e, d])
                 * (min(element._max_area, device._area) - s[e, d]) / min(element._max_area, device._area)
                 * x[e, d]
                 for e, element in enumerate(elements)
                     for d, device in enumerate(devices)
-            )
+            ) / (len(elements) * len(devices))
 
     # Penalty for assigning duplicate/replicate elements
-    cost -= gamma * quicksum(user_num_replicated_elements[u] / np.sum(user_element_access[u, :])
-                             for u, user in enumerate(users))
+    for u, user in enumerate(users):
+        num_user_elements = np.sum(user_element_access[u, :])
+        num_user_devices = np.sum(user_device_access[u, :])
+        if num_user_elements > 0 and num_user_devices > 0:
+            cost -= gamma * user_num_replicated_elements[u] \
+                    / (num_user_elements * num_user_devices * len(users))
 
     # Penalty for assigning too much on one device
-    cost -= delta * quicksum(quicksum(x[e, d] for e, element in enumerate(elements))
-                             / max_elements_per_device_guideline
-                             for d, device in enumerate(devices))
+    cost -= delta * quicksum(device_num_elements_over_max[d]
+                             for d, device in enumerate(devices)) / len(devices)
 
     model.setObjective(cost, GRB.MAXIMIZE)
 

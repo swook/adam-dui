@@ -74,9 +74,9 @@ scenario = init('With only a laptop available, most important elements should be
 scenario.add_elements_from_text(pick(element_definitions,
     ['video', 'playback controls', 'volume controls', 'comments', 'suggestions']))
 scenario.add_devices_from_text(pick(device_definitions,
-    ['PC']))
+    ['Laptop']))
 scenario.run(expect={
-    'PC': ['video', 'playback controls', 'suggestions'],
+    'Laptop': ['video', 'comments', 'suggestions'],
 })
 
 
@@ -110,7 +110,7 @@ scenario.run(expect={
     'TV':               ['video'],
     'PC':               ['comments'],
     'Tablet':           ['suggestions'],
-    'Phone (Alice)':    ['playback controls'],
+    'Phone (Alice)':    ['volume controls'],
     'Phone (Caroline)': ['playback controls'],
     'Watch (Alice)':    ['playback controls'],
     'Watch (Bob)':      ['playback controls'],
