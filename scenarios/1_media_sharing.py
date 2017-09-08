@@ -5,7 +5,7 @@ from common import *
 # Properties: visual_display, text_input, touch_pointing, mouse_pointing
 element_definitions = {
     'video':             'video             | 10 | 500 | 300 | 2600 | 2000 | 5000',
-    'playback controls': 'playback controls |  6 | 150 | 100 |  500 |  300 | 0032',
+    'playback controls': 'playback controls |  9 | 150 | 100 |  500 |  300 | 0032',
     'suggestions':       'suggestions       |  5 | 300 | 600 | 1000 | 1000 | 3054',
     'comments':          'comments          |  4 | 300 | 400 |  800 | 1500 | 1500',
     'volume controls':   'volume controls   |  2 | 150 | 100 |  500 |  300 | 0032',
@@ -76,7 +76,7 @@ scenario.add_elements_from_text(pick(element_definitions,
 scenario.add_devices_from_text(pick(device_definitions,
     ['Laptop']))
 scenario.run(expect={
-    'Laptop': ['video', 'comments', 'suggestions'],
+    'Laptop': ['video', 'playback controls', 'suggestions'],
 })
 
 
@@ -91,7 +91,7 @@ scenario.add_elements_from_text(pick(element_definitions,
 scenario.add_devices_from_text(pick(device_definitions,
     ['TV', 'PC']))
 scenario.run(expect={
-    'TV': ['~comments'],
+    'TV': ['~comments', 'video'],
     'PC': ['comments'],
 })
 
@@ -107,7 +107,7 @@ scenario.add_elements_from_text(pick(element_definitions,
 scenario.add_devices_from_text(pick(device_definitions,
     ['TV', 'PC', 'Tablet', 'Phone (Alice)', 'Phone (Caroline)', 'Watch (Alice)', 'Watch (Bob)']))
 scenario.run(expect={
-    'TV':               ['video'],
+    'TV':               ['video', '~playback controls', '~volume controls', '~comments', '~suggestions'],
     'PC':               ['comments'],
     'Tablet':           ['suggestions'],
     'Phone (Alice)':    ['volume controls'],

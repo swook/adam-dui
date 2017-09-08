@@ -74,14 +74,14 @@ def optimize(elements, devices, users):
     # All users must have access to a device as well as assigned elements.
     # That is, if there is even one user who is not authorised to view an element, the element
     # should not be assigned to the device.
-    element_device_access = np.zeros((len(elements), len(devices)))
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
-            if np.any(user_device_access[:, d] > user_element_access[:, e]):
+            # Constraint: user has no access to element so don't assign to user's device
+            # Constraint: if zero compatibility element should not be placed on device
+            if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
+               element_device_comp[e, d] < 1e-5:
                 model.addConstr(x[e, d] == 0,
                                 name='privacy_%s_%s' % (element.name, device.name))
-            else:
-                element_device_access[e, d] = 1
 
     model.update()
 
@@ -111,12 +111,13 @@ def optimize(elements, devices, users):
         #       that is, more important elements can be repeated
         user_num_replicated_elements[u] = model.addVar(vtype=GRB.CONTINUOUS)
         model.addConstr(user_num_replicated_elements[u]
-                        == float(1. - element_user_imp[e, u]) * (user_num_element[u, e] - element_assigned_to_user[e, u]))
+                        == quicksum(float(1. - element_user_imp[e, u]) * (user_num_element[u, e] - element_assigned_to_user[e, u])
+                                    for e, element in enumerate(elements)))
 
     model.update()
 
     # Variables to penalize assigning too many elements on a device
-    max_elements_per_device_guideline = 3
+    max_elements_per_device_guideline = 4
     device_num_elements = {}
     device_num_elements_sub_our_max = {}
     device_num_elements_over_max = {}
@@ -141,28 +142,28 @@ def optimize(elements, devices, users):
 
     alpha1 = 0.30
     alpha2 = 0.25
-    beta   = 0.30
-    gamma  = 0.10
-    delta  = 0.05
+    beta   = 0.35
+    gamma  = 0.02
+    delta  = 0.08
     assert alpha1 + alpha2 + beta + gamma + delta == 1.0
 
     # Maximize importance in assignment
     cost += alpha1 * quicksum(
-                element_device_imp[e, d] * element_device_access[e, d] * x[e, d]
+                element_device_imp[e, d] * x[e, d]
                 for e, _ in enumerate(elements)
                     for d, device in enumerate(devices)
             ) / (len(elements) * len(devices))
 
     # Maximize compatibility in assignment
     cost += alpha2 * quicksum(
-                element_device_comp[e, d] * element_device_access[e, d] * x[e, d]
+                element_device_comp[e, d] * x[e, d]
                 for e, _ in enumerate(elements)
                     for d, device in enumerate(devices)
             ) / (len(elements) * len(devices))
 
     # Minimize (A_max - A) / A_max scaled by importance
     cost -= beta * quicksum(
-                float(element_device_imp[e, d] * element_device_access[e, d])
+                float(element_device_imp[e, d])
                 * (min(element._max_area, device._area) - s[e, d]) / min(element._max_area, device._area)
                 * x[e, d]
                 for e, element in enumerate(elements)
