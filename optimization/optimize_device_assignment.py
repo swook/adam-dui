@@ -117,23 +117,23 @@ def optimize(elements, devices, users):
     model.update()
 
     # Variables to penalize assigning too many elements on a device
+    # TODO: does not allow too small devices
     max_elements_per_device_guideline = 4
     device_num_elements = {}
     device_num_elements_sub_our_max = {}
     device_num_elements_over_max = {}
     for d, device in enumerate(devices):
-        for e, element in enumerate(elements):
-            device_num_elements[d] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
-            device_num_elements_sub_our_max[d] = model.addVar(vtype=GRB.INTEGER,
-                                                              lb=-len(elements), ub=len(elements))
-            device_num_elements_over_max[d] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
+        device_num_elements[d] = model.addVar(vtype=GRB.SEMIINT, lb=0, ub=len(elements))
+        device_num_elements_sub_our_max[d] = model.addVar(vtype=GRB.INTEGER,
+                                                          lb=-len(elements)-4, ub=len(elements))
+        device_num_elements_over_max[d] = model.addVar(vtype=GRB.SEMIINT, lb=0, ub=len(elements))
 
-            model.addConstr(device_num_elements[d]
-                            == quicksum(x[e, d] for e, element in enumerate(elements)))
-            model.addConstr(device_num_elements_sub_our_max[d]
-                            == device_num_elements[d] - max_elements_per_device_guideline)
-            model.addGenConstrMax(device_num_elements_over_max[d],
-                                  [device_num_elements_sub_our_max[d], 0])
+        model.addConstr(device_num_elements[d]
+                        == quicksum(x[e, d] for e, element in enumerate(elements)))
+        model.addConstr(device_num_elements_sub_our_max[d] + max_elements_per_device_guideline
+                        == device_num_elements[d])
+        model.addGenConstrMax(device_num_elements_over_max[d],
+                              [device_num_elements_sub_our_max[d], 0])
 
     model.update()
 
