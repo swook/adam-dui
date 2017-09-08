@@ -143,8 +143,8 @@ def optimize(elements, devices, users):
     alpha1 = 0.20
     alpha2 = 0.25
     beta   = 0.25
-    gamma  = 0.20
-    delta  = 0.10
+    gamma  = 0.15
+    delta  = 0.15
     assert np.abs(alpha1 + alpha2 + beta + gamma + delta - 1.0) < 1e-6
 
     # Maximize importance in assignment
@@ -268,8 +268,9 @@ def pre_process_objects(elements, devices, users):
     # Add noise to prevent stalemates
     def add_noise(array):
         array += 1e-6 * np.random.random(size=array.shape)
-    add_noise(element_device_comp)
-    add_noise(element_user_imp)
+    # add_noise(element_device_comp)
+    # add_noise(element_device_imp)
+    # add_noise(element_user_imp)
 
     return element_user_imp, element_device_imp, element_device_comp, user_device_access, \
            user_element_access

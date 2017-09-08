@@ -111,9 +111,9 @@ scenario.run(expect={
     'PC':               ['comments'],
     'Tablet':           ['suggestions'],
     'Phone (Alice)':    ['volume controls'],
-    'Phone (Caroline)': ['playback controls'],
+    #'Phone (Caroline)': ['playback controls'],
     'Watch (Alice)':    ['playback controls'],
-    # 'Watch (Bob)':      ['playback controls'],
+    'Watch (Bob)':      ['playback controls'],
 })
 
 check_previous_tests_for_failure()
