@@ -69,12 +69,24 @@ def _our_json_decode(o):
             keys = o.keys()
             return Properties(**dict((k, o[k]) for k in keys))
         elif class_name == 'Element':
-            return Element(**o)  # Unpack dict as keyword-arguments
+            allowed_users = []
+            if 'allowed_users' in o.keys():
+                allowed_users = o['allowed_users']
+                del o['allowed_users']
+            element = Element(**o)  # Unpack dict as keyword-arguments
+            element.allowed_users = allowed_users
+            return element
         elif class_name == 'Device':
             o['affordances'] = _our_json_decode(o['affordances'])
             return Device(**o)
         elif class_name == 'User':
-            return User(**o)
+            element_importances = {}
+            if 'element_importances' in o.keys():
+                element_importances = o['element_importances']
+                del o['element_importances']
+            user = User(**o)
+            user.importance = element_importances
+            return user
     elif isinstance(o, list):
         out = []
         for item in o:
@@ -93,10 +105,16 @@ def json_to_our_inputs(s):
     devices = out['data']['devices']
     elements = out['data']['elements']
     users = out['data']['users']
+
     user_id_to_device = dict((u.id, u) for u in users)
     for device in devices:
         device.users = [user_id_to_device[uid] for uid in device.users
                         if uid in user_id_to_device.keys()]
+
+    for element in elements:
+        element.allowed_users \
+            = [user_id_to_device[uid] for uid in element.allowed_users
+               if uid in user_id_to_device.keys()]
 
     return elements, devices, users, token
 
