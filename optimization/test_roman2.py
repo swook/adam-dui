@@ -39,7 +39,7 @@ input_json = """
       {
         "__class__": "Device",
         "name": "Bobby's Smartphone",
-        "width": 375,
+        "width": 400,
         "height": 667,
         "users": [
           "bobby:github"
@@ -84,13 +84,13 @@ input_json = """
         },
         "min_width": 400,
         "min_height": 400,
-        "max_width": 800,
-        "max_height": 600
+        "max_width": 2000,
+        "max_height": 2000
       },
       {
         "__class__": "Element",
         "name": "colors",
-        "importance": 5,
+        "importance": 1,
         "allowed_users": ["raedle:github", "bobby:github"],
         "requirements": {
           "__class__": "Properties",
@@ -107,7 +107,7 @@ input_json = """
       {
         "__class__": "Element",
         "name": "brushes",
-        "importance": 2,
+        "importance": 1,
         "allowed_users": ["raedle:github", "bobby:github"],
         "requirements": {
           "__class__": "Properties",
@@ -126,16 +126,16 @@ input_json = """
       {
         "__class__": "User",
         "id": "raedle:github",
-        "name": "raedle",
-        "element_importances": {
-            "brushes": 10,
-            "colors": 5
-        }
+        "name": "raedle"
       },
       {
         "__class__": "User",
         "id": "bobby:github",
-        "name": "bobby"
+        "name": "bobby",
+        "element_importances": {
+            "brushes": 2,
+            "colors": 0
+        }
       }
     ]
   },

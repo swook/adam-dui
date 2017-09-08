@@ -71,7 +71,8 @@ def _our_json_decode(o):
         elif class_name == 'Element':
             allowed_users = []
             if 'allowed_users' in o.keys():
-                allowed_users = o['allowed_users']
+                if isinstance(o['allowed_users'], list):
+                    allowed_users = o['allowed_users']
                 del o['allowed_users']
             element = Element(**o)  # Unpack dict as keyword-arguments
             element.allowed_users = allowed_users
@@ -82,7 +83,8 @@ def _our_json_decode(o):
         elif class_name == 'User':
             element_importances = {}
             if 'element_importances' in o.keys():
-                element_importances = o['element_importances']
+                if isinstance(o['element_importances'], dict):
+                    element_importances = o['element_importances']
                 del o['element_importances']
             user = User(**o)
             user.importance = element_importances
