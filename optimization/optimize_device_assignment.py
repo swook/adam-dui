@@ -38,12 +38,12 @@ def optimize(elements, devices, users):
     model.update()
 
     for d, device in enumerate(devices):
-        # Constraint 1: sum of widget areas shouldn't exceed device capacity (area)
+        # (7) sum of widget areas shouldn't exceed device capacity (area)
         model.addConstr(quicksum(s[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
         if np.any(user_device_access[:, d]):
-            # Constraint 2: a device which is accessible by a user should have at least one element
+            # (12) a device which is accessible by a user should have at least one element
             min_size_check = np.zeros((len(elements), 1))
             for e, element in enumerate(elements):
                 min_size_check[e] = device.width >= element.min_width and \
@@ -52,18 +52,18 @@ def optimize(elements, devices, users):
                 model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
                                 'at_least_one_widget_constraint_%s' % device.name)
         else:
-            # Constraint 3: a device which is not accessible by any user should not have a element
+            # (12) a device which is not accessible by any user should not have a element
             model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
                             'no_element_constraint_%s' % device.name)
 
         for e, element in enumerate(elements):
-            # Constraint 4: the min. width/height of an element should not exceed device width/height
+            # (8,9) the min. width/height of an element should not exceed device width/height
             model.addConstr(element.min_width * x[e, d] <= device.width,
                             'min_width_exceed_constraint_%s_on_%s' % (element.name, device.name))
             model.addConstr(element.min_height * x[e, d] <= device.height,
                             'min_height_exceed_constraint_%s_on_%s' % (element.name, device.name))
 
-            # Constraint 5: Set s to zero if x is zero
+            # (10,11) Set s to zero if x is zero
             model.addGenConstrIndicator(x[e, d], False, s[e, d] == 0)
             model.addGenConstrIndicator(x[e, d], True, s[e, d] >= element._min_area)
             model.addGenConstrIndicator(x[e, d], True, s[e, d] <= min(element._max_area, device._area))
@@ -76,8 +76,8 @@ def optimize(elements, devices, users):
     # should not be assigned to the device.
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
-            # Constraint: user has no access to element so don't assign to user's device
-            # Constraint: if zero compatibility element should not be placed on device
+            # (13) user has no access to element so don't assign to user's device
+            # (14) if zero compatibility element should not be placed on device
             if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
                element_device_comp[e, d] < 1e-5:
                 model.addConstr(x[e, d] == 0,
