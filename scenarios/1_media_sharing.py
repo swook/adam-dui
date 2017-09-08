@@ -5,7 +5,7 @@ from common import *
 # Properties: visual_display, text_input, touch_pointing, mouse_pointing
 element_definitions = {
     'video':             'video             | 10 | 500 | 300 | 2600 | 2000 | 5000',
-    'playback controls': 'playback controls |  9 | 150 | 100 |  500 |  300 | 0032',
+    'playback controls': 'playback controls |  8 | 150 | 100 |  500 |  300 | 0032',
     'suggestions':       'suggestions       |  5 | 300 | 600 | 1000 | 1000 | 3054',
     'comments':          'comments          |  4 | 300 | 400 |  800 | 1500 | 1500',
     'volume controls':   'volume controls   |  2 | 150 | 100 |  500 |  300 | 0032',
@@ -113,7 +113,7 @@ scenario.run(expect={
     'Phone (Alice)':    ['volume controls'],
     'Phone (Caroline)': ['playback controls'],
     'Watch (Alice)':    ['playback controls'],
-    'Watch (Bob)':      ['playback controls'],
+    # 'Watch (Bob)':      ['playback controls'],
 })
 
 check_previous_tests_for_failure()

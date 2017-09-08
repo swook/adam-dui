@@ -140,12 +140,12 @@ def optimize(elements, devices, users):
     # Objective function
     cost = 0
 
-    alpha1 = 0.30
+    alpha1 = 0.20
     alpha2 = 0.25
-    beta   = 0.35
-    gamma  = 0.02
-    delta  = 0.08
-    assert alpha1 + alpha2 + beta + gamma + delta == 1.0
+    beta   = 0.25
+    gamma  = 0.20
+    delta  = 0.10
+    assert np.abs(alpha1 + alpha2 + beta + gamma + delta - 1.0) < 1e-6
 
     # Maximize importance in assignment
     cost += alpha1 * quicksum(
@@ -217,6 +217,16 @@ def pre_process_objects(elements, devices, users):
     num_devices = len(devices)
     num_users = len(users)
 
+    # Normalize so values are in [0, 1]
+    def normalized(vector):
+        v_max = vector.max()
+        v_min = 0.0  # vector.min()
+        v_dif = v_max - v_min
+        vector = vector - v_min
+        if v_dif > 1e-6:
+            vector = vector / v_dif
+        return vector
+
     # Retrieve, store and normalize user-specific element importance
     element_user_imp = np.ones((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))
@@ -226,16 +236,14 @@ def pre_process_objects(elements, devices, users):
             element_user_imp[element_name_index[element_name], u] = importance
 
     for u, user in enumerate(users):
-        norm = np.linalg.norm(element_user_imp[:, u])
-        if norm > 0.0:
-            element_user_imp[:, u] /= norm
+        element_user_imp[:, u] = normalized(element_user_imp[:, u])
 
     # Calculate and create normalized matrix of element-device compatibility
     element_device_comp = np.zeros((num_elements, num_devices))
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             element_device_comp[e, d] = device.calculate_compatibility(element, compatibility_metric)
-        element_device_comp[:, d] /= np.linalg.norm(element_device_comp[:, d])
+        element_device_comp[:, d] = normalized(element_device_comp[:, d])
 
     # Set boolean matrix of user-device access
     # TODO: try continuous numbers
@@ -255,9 +263,7 @@ def pre_process_objects(elements, devices, users):
     # Normalize element importances per device
     element_device_imp = np.asmatrix(element_user_imp) * np.asmatrix(user_device_access)
     for d, device in enumerate(devices):
-        norm = np.linalg.norm(element_device_imp[:, d])
-        if norm > 0.0:
-            element_device_imp[:, d] /= norm
+        element_device_imp[:, d] = normalized(element_device_imp[:, d])
 
     # Add noise to prevent stalemates
     def add_noise(array):
