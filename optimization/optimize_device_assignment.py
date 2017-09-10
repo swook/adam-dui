@@ -65,11 +65,14 @@ def optimize(elements, devices, users):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
             # (14) if zero compatibility element should not be placed on device
-            if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
-               element_device_comp[e, d] < 1e-5:
+            not_accessible = np.any(user_device_access[:, d] > user_element_access[:, e]) or \
+                             not np.any(user_device_access[:, d])
+            if not_accessible or element_device_comp[e, d] < 1e-5:
+                if element.name == 'Presentation (Notes)':
+                    print('No %s on %s.' % (element.name, device.name))
                 model.addConstr(x[e, d] == 0,
                                 name='privacy_%s_%s' % (element.name, device.name))
-            else:
+            elif not not_accessible:
                 element_device_access[e, d] = 1
 
     model.update()
@@ -242,9 +245,6 @@ def pre_process_objects(elements, devices, users):
         for element_name, importance in user.importance.iteritems():
             element_user_imp[element_name_index[element_name], u] = importance
 
-    for u, user in enumerate(users):
-        element_user_imp[:, u] = normalized(element_user_imp[:, u])
-
     # Calculate and create normalized matrix of element-device compatibility
     element_device_comp = np.zeros((num_elements, num_devices))
     for d, device in enumerate(devices):
@@ -266,6 +266,11 @@ def pre_process_objects(elements, devices, users):
             # NOTE: we set access to False if importance 0
             if element.user_has_access(user) and element_user_imp[e, u] > 0.0:
                 user_element_access[u, e] = 1
+            else:
+                element_user_imp[e, u] = 0
+
+    for u, user in enumerate(users):
+        element_user_imp[:, u] = normalized(element_user_imp[:, u])
 
     # Normalize element importances per device
     element_device_imp = np.asmatrix(element_user_imp) * np.asmatrix(user_device_access)
