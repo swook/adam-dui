@@ -4,17 +4,16 @@ from common import *
 # Name | Importance | min W | min H | max W | max H | Properties
 # Properties: visual_display, text_input, touch_pointing, mouse_pointing
 element_definitions = {
-    'Presentation (View)':     ' 9 | 800 | 500 | 2000 | 2000 | 5000',
+    'Presentation (View)':     ' 8 | 800 | 500 | 2000 | 2000 | 5000',
     'Presentation (Notes)':    '10 | 500 | 300 | 2000 | 2000 | 5011 | Presenter',
-    'Presentation (Controls)': ' 8 | 300 | 100 | 1000 |  100 | 0053 | Presenter',
-    'Notes (Shared)':          ' 6 | 300 | 500 | 1000 | 1500 | 0530',
-    'Notes (Employee1)':       ' 4 | 300 | 500 | 1000 | 1500 | 0530 | Employee1',
-    'Notes (Employee2)':       ' 4 | 300 | 500 | 1000 | 1500 | 0530 | Employee2',
-    'Notes (Employee3)':       ' 4 | 300 | 500 | 1000 | 1500 | 0530 | Employee3',
-    'Notes (Employee4)':       ' 4 | 300 | 500 | 1000 | 1500 | 0530 | Employee4',
-    'Notes (Employee5)':       ' 4 | 300 | 500 | 1000 | 1500 | 0530 | Employee5',
+    'Presentation (Controls)': ' 7 | 300 | 100 | 1000 |  100 | 0053 | Presenter',
+    'Notes (Shared)':          ' 5 | 300 | 500 | 1000 | 1500 | 0530',
+    'Notes (Employee1)':       ' 3 | 300 | 500 | 1000 | 1500 | 0530 | Employee1',
+    'Notes (Employee2)':       ' 3 | 300 | 500 | 1000 | 1500 | 0530 | Employee2',
+    'Notes (Employee3)':       ' 3 | 300 | 500 | 1000 | 1500 | 0530 | Employee3',
+    'Notes (Employee4)':       ' 3 | 300 | 500 | 1000 | 1500 | 0530 | Employee4',
+    'Notes (Employee5)':       ' 3 | 300 | 500 | 1000 | 1500 | 0530 | Employee5',
     'Clock':                   ' 1 | 100 | 100 |  300 |  300 | 1000',
-    'Quaterly Figures':        ' 4 | 300 | 400 |  800 | 1000 | 3000',
 }
 # Name | Width | Height | Properties | Users
 # Properties: visual_display, text_input, touch_pointing, mouse_pointing
@@ -69,7 +68,6 @@ scenario.add_elements_from_text(pick(element_definitions,
      'Notes (Employee3)',
      'Notes (Employee4)',
      'Clock',
-     'Quaterly Figures',
      ]))
 scenario.add_devices_from_text(pick(device_definitions,
     ['Projector1',
@@ -124,7 +122,6 @@ scenario.add_elements_from_text(pick(element_definitions,
      'Notes (Employee4)',
      'Notes (Employee5)',
      'Clock',
-     'Quaterly Figures',
      ]))
 scenario.add_devices_from_text(pick(device_definitions,
     ['Projector1',
