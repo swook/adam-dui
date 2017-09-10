@@ -42,20 +42,6 @@ def optimize(elements, devices, users):
         model.addConstr(quicksum(s[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
-        if np.any(user_device_access[:, d]):
-            # (12) a device which is accessible by a user should have at least one element
-            min_size_check = np.zeros((len(elements), 1))
-            for e, element in enumerate(elements):
-                min_size_check[e] = device.width >= element.min_width and \
-                                    device.height >= element.min_height
-            if np.any(min_size_check):
-                model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
-                                'at_least_one_widget_constraint_%s' % device.name)
-        else:
-            # (12) a device which is not accessible by any user should not have a element
-            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
-                            'no_element_constraint_%s' % device.name)
-
         for e, element in enumerate(elements):
             # (8,9) the min. width/height of an element should not exceed device width/height
             model.addConstr(element.min_width * x[e, d] <= device.width,
@@ -74,6 +60,7 @@ def optimize(elements, devices, users):
     # All users must have access to a device as well as assigned elements.
     # That is, if there is even one user who is not authorised to view an element, the element
     # should not be assigned to the device.
+    element_device_access = np.zeros((len(elements), len(devices)))
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
@@ -82,7 +69,27 @@ def optimize(elements, devices, users):
                element_device_comp[e, d] < 1e-5:
                 model.addConstr(x[e, d] == 0,
                                 name='privacy_%s_%s' % (element.name, device.name))
+            else:
+                element_device_access[e, d] = 1
 
+    model.update()
+
+
+    for d, device in enumerate(devices):
+        if np.any(element_device_access[:, d]):
+            # (12) a device which is accessible by a user should have at least one element
+            min_size_check = np.zeros((len(elements), 1))
+            for e, element in enumerate(elements):
+                if element_device_access[e, d]:
+                    min_size_check[e] = device.width >= element.min_width and \
+                                        device.height >= element.min_height
+            if np.any(min_size_check):
+                model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
+                                'at_least_one_widget_constraint_%s' % device.name)
+        else:
+            # (12) a device which is not accessible by any user should not have a element
+            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
+                            'no_element_constraint_%s' % device.name)
     model.update()
 
     # Diversity variables and constraints
