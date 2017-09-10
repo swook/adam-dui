@@ -19,6 +19,14 @@ def optimize(elements, devices, users):
             Device3: [Element1],
         }
     """
+    # Is there sufficient information to solve the assignment problem?
+    if len(users) == 0 or len(devices) == 0 or len(elements) == 0:
+        output = {}
+        for device in devices:
+            output[device] = []
+        return output
+
+    # Form input data
     element_user_imp, element_device_imp, element_device_comp, user_device_access, \
     user_element_access = pre_process_objects(elements, devices, users)
 
