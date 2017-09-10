@@ -76,8 +76,6 @@ def optimize(elements, devices, users):
             not_accessible = np.any(user_device_access[:, d] > user_element_access[:, e]) or \
                              not np.any(user_device_access[:, d])
             if not_accessible or element_device_comp[e, d] < 1e-5:
-                if element.name == 'Presentation (Notes)':
-                    print('No %s on %s.' % (element.name, device.name))
                 model.addConstr(x[e, d] == 0,
                                 name='privacy_%s_%s' % (element.name, device.name))
             elif not not_accessible:

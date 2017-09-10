@@ -52,7 +52,8 @@ class Scenario(object):
             users = []
             if line_entries[4] > '':
                 users = [self.users[user_name.strip()]
-                         for user_name in line_entries[4].split(',')]
+                         for user_name in line_entries[4].split(',')
+                         if user_name.strip() in self.users]
 
             self.add_device(Device(name, width, height, affordances, users))
 
