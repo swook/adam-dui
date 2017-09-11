@@ -118,17 +118,6 @@ def optimize(elements, devices, users):
                             'no_element_constraint_%s' % device.name)
     model.update()
 
-    # Diversity variables and constraints
-    user_num_element = {}
-    for u, user in enumerate(users):
-        for e, element in enumerate(elements):
-            # The number of a particular element a user has assigned
-            user_num_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
-            model.addConstr(user_num_element[u, e]
-                            == quicksum(x[e, d] * user_device_access[u, d] for d, device in enumerate(devices))
-                               * user_element_access[u, e])
-    model.update()
-
     # Objective function
     cost = 0
 
@@ -167,15 +156,20 @@ def optimize(elements, devices, users):
             #         )) / (device._area * len(devices))
 
 
-    # Penalty for assigning duplicate/replicate elements
+    # Term for assigning more less important elements for diversity
     for u, user in enumerate(users):
         num_user_devices = np.sum(user_device_access[u, :])
-        sum_inv_importances = np.sum(1.0 - element_user_imp[:, u])
-        if num_user_devices > 0 and sum_inv_importances > 0.0:
-            cost -= diversity_weight * quicksum(
-                        (1.0 - element_user_imp[e, u]) * user_num_element[u, e]
-                        for e, element in enumerate(elements)
-                    ) / (sum_inv_importances * num_user_devices * len(users))
+        num_user_elements = np.sum(user_element_access[u, :])
+        if num_user_devices > 0 and num_user_elements > 0:
+            cost += diversity_weight * quicksum(
+                        # Inverse importance for less important elements
+                        float(1.0 - element_user_imp[e, u]) *
+                        quicksum(  # Number of elements user has access to
+                            user_element_access[u, e] * element_device_access[e, d] * x[e, d]
+                            for d, _ in enumerate(devices)
+                        )
+                        for e, _ in enumerate(elements)
+                    ) / (num_user_elements * num_user_devices * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
 

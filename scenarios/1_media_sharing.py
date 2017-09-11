@@ -7,7 +7,7 @@ element_definitions = {
     'video':             'video             | 10 | 500 | 300 | 2600 | 2000 | 5000',
     'playback controls': 'playback controls |  8 | 150 | 100 |  500 |  300 | 0032',
     'suggestions':       'suggestions       |  5 | 300 | 600 | 1000 | 1000 | 3054',
-    'comments':          'comments          |  4 | 300 | 400 |  800 | 1500 | 1500',
+    'comments':          'comments          |  4 | 500 | 900 |  800 | 1500 | 1500',
     'volume controls':   'volume controls   |  2 | 150 | 100 |  500 |  300 | 0032',
 }
 # Name | Width | Height | Properties | Users
@@ -15,8 +15,8 @@ element_definitions = {
 device_definitions = {
     'TV':               'TV               | 2600 | 1600 | 5000 | alice,bob,caroline,darryl',
     'PC':               'PC               | 1920 | 1080 | 3505 | alice,bob,caroline,darryl',
-    'Laptop':           'Laptop           | 1280 |  800 | 3503 | alice,bob,caroline,darryl',
-    'Tablet':           'Tablet           | 1280 |  720 | 1250 | alice,bob,caroline,darryl',
+    'Laptop':           'Laptop           | 1280 |  800 | 3403 | alice,bob,caroline,darryl',
+    'Tablet':           'Tablet           | 1280 |  720 | 3250 | alice,bob,caroline,darryl',
     'Phone (Alice)':    'Phone (Alice)    |  600 |  900 | 0330 | alice',
     'Phone (Caroline)': 'Phone (Caroline) |  600 |  900 | 0330 | caroline',
     'Watch (Alice)':    'Watch (Alice)    |  150 |  150 | 0020 | alice',

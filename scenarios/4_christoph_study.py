@@ -180,7 +180,7 @@ scenario = init('Task 3')
 scenario.add_users_by_names('Alice', 'Bob', 'Caroline', 'Darryl')
 element_definitions = {
     'Video':             '10 | 1920 | 1080 | 2600 | 1600 | 5000',
-    'Playback Controls': ' 9 |  150 |  100 |  500 |  300 | 0052 | Alice',
+    'Playback Controls': ' 9 |  150 |  100 |  300 |  300 | 0052 | Alice',
     'Suggestions':       ' 4 |  400 |  800 |  800 |  800 | 4043',
     'Comments':          ' 4 |  800 |  900 |  900 |  900 | 1500',
     'Voting Controls':   ' 6 |  150 |  100 |  300 |  200 | 0052',  # Yes or No
@@ -219,9 +219,9 @@ scenario.run(expect={
     'TV':                        ['Video'],
     'Laptop':                    ['Comments'],
     'Tablet (Caroline, Darryl)': ['Suggestions', 'Voting Controls'],
-    'Phone (Alice)':             ['Voting Controls'],
+    'Phone (Alice)':             ['Playback Controls'],
     'Phone (Caroline)':          ['Voting Controls'],
-    'Watch (Alice)':             ['Playback Controls'],
+    'Watch (Alice)':             ['Voting Controls'],
     'Watch (Bob)':               ['Voting Controls'],
     'Abandoned PC':              [],
 })
