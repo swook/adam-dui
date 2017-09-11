@@ -155,7 +155,7 @@ class Scenario(object):
             print('\nTESTS')
             print('=====\n')
             for i, msg in enumerate(msgs):
-                print('(%d) %s' % (i + 1, msg))
+                print('(%02d) %s' % (i + 1, msg))
             print('')
 
 
@@ -170,7 +170,7 @@ def check_previous_tests_for_failure():
     for name, msgs in all_test_results:
         print(name)
         for i, msg in enumerate(msgs):
-            print('(%d) %s' % (i + 1, msg))
+            print('(%02d) %s' % (i + 1, msg))
         print('')
 
     # If any failures, raise Exception

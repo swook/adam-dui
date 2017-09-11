@@ -119,42 +119,22 @@ def optimize(elements, devices, users):
     model.update()
 
     # Diversity variables and constraints
-    user_num_unique_elements = {}
     user_num_element = {}
-    user_num_replicated_elements = {}
-    element_assigned_to_user = {}
     for u, user in enumerate(users):
         for e, element in enumerate(elements):
             # The number of a particular element a user has assigned
             user_num_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
-            element_assigned_to_user[e, u] = model.addVar(vtype=GRB.BINARY)  # bool for above
             model.addConstr(user_num_element[u, e]
-                            == quicksum(x[e, d] * user_device_access[u, d] * user_element_access[u, e]
-                                        for d, device in enumerate(devices)))
-            model.addGenConstrMin(element_assigned_to_user[e, u], [user_num_element[u, e], 1])
-
-        # Number of unique elements assigned to user
-        user_num_unique_elements[u] = model.addVar(vtype=GRB.SEMIINT)
-        model.addConstr(user_num_unique_elements[u]
-                        == quicksum(element_assigned_to_user[e, u]
-                                    for e, element in enumerate(elements)))
-
-        # Number of "redundant" element assignments (duplicates)
-        # NOTE: weighted by inverse element-user importance,
-        #       that is, more important elements can be repeated
-        user_num_replicated_elements[u] = model.addVar(vtype=GRB.CONTINUOUS)
-        model.addConstr(user_num_replicated_elements[u]
-                        == quicksum(float(1. - element_user_imp[e, u]) *
-                                    (user_num_element[u, e] - element_assigned_to_user[e, u])
-                                    for e, element in enumerate(elements)))
+                            == quicksum(x[e, d] * user_device_access[u, d] for d, device in enumerate(devices))
+                               * user_element_access[u, e])
     model.update()
 
     # Objective function
     cost = 0
 
-    compatibility_weight = 0.2
+    compatibility_weight = 0.3
     quality_weight       = 0.6
-    diversity_weight     = 0.2
+    diversity_weight     = 0.1
     assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
 
     for d, _ in enumerate(devices):
@@ -192,8 +172,10 @@ def optimize(elements, devices, users):
         num_user_devices = np.sum(user_device_access[u, :])
         sum_inv_importances = np.sum(1.0 - element_user_imp[:, u])
         if num_user_devices > 0 and sum_inv_importances > 0.0:
-            cost -= diversity_weight * user_num_replicated_elements[u] \
-                    / (sum_inv_importances * num_user_devices * len(users))
+            cost -= diversity_weight * quicksum(
+                        (1.0 - element_user_imp[e, u]) * user_num_element[u, e]
+                        for e, element in enumerate(elements)
+                    ) / (sum_inv_importances * num_user_devices * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
 

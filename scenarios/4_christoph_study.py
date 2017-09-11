@@ -216,7 +216,7 @@ scenario.add_devices_from_text(pick(device_definitions,
 scenario.set_user_importance('Darryl', 'Comments', 1)
 scenario.set_user_importance('Darryl', 'Suggestions', 6)
 scenario.run(expect={
-    'TV':                        ['Video', '~Comments', '~Suggestions'],
+    'TV':                        ['Video'],
     'Laptop':                    ['Comments'],
     'Tablet (Caroline, Darryl)': ['Suggestions', 'Voting Controls'],
     'Phone (Alice)':             ['Voting Controls'],
