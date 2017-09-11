@@ -47,15 +47,14 @@ def optimize(elements, devices, users):
 
     for d, device in enumerate(devices):
         # (7) sum of widget areas shouldn't exceed device capacity (area)
-        model.addConstr(quicksum(s[e, d] * x[e, d] for e, _ in enumerate(elements)) <= device._area,
+        model.addConstr(quicksum(s[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
         for e, element in enumerate(elements):
             # (8,9) the min. width/height of an element should not exceed device width/height
-            model.addConstr(element.min_width * x[e, d] <= device.width,
-                            'min_width_exceed_constraint_%s_on_%s' % (element.name, device.name))
-            model.addConstr(element.min_height * x[e, d] <= device.height,
-                            'min_height_exceed_constraint_%s_on_%s' % (element.name, device.name))
+            if element.min_width > device.width or element.min_height > device.height:
+                model.addConstr(x[e, d] == 0,
+                                'min_size_exceeds_constraint_%s_on_%s' % (element.name, device.name))
 
             # (10,11) Set s to zero if x is zero
             model.addGenConstrIndicator(x[e, d], False, s[e, d] == 0)
@@ -68,21 +67,39 @@ def optimize(elements, devices, users):
     # All users must have access to a device as well as assigned elements.
     # That is, if there is even one user who is not authorised to view an element, the element
     # should not be assigned to the device.
-    element_device_access = np.zeros((len(elements), len(devices)))
+    element_device_access = np.ones((len(elements), len(devices)))
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
             # (14) if zero compatibility element should not be placed on device
-            not_accessible = np.any(user_device_access[:, d] > user_element_access[:, e]) or \
-                             not np.any(user_device_access[:, d])
-            if not_accessible or element_device_comp[e, d] < 1e-5:
-                model.addConstr(x[e, d] == 0,
-                                name='privacy_%s_%s' % (element.name, device.name))
-            elif not not_accessible:
-                element_device_access[e, d] = 1
+            if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
+               not np.any(user_device_access[:, d]) or \
+               not np.any(user_element_access[:, e]):
+                element_device_access[e, d] = 0
 
     model.update()
 
+    for d, device in enumerate(devices):
+        for e, element in enumerate(elements):
+            # Do not assign inaccessible elements
+            if element_device_access[e, d] == 0:
+                model.addConstr(x[e, d] == 0,
+                                name='privacy_%s_%s' % (element.name, device.name))
+
+            # Do not assign 0-importance elements
+            # TODO: add to paper
+            elif element_device_imp[e, d] < 1e-5:
+                element_device_access[e, d] = 0
+                model.addConstr(x[e, d] == 0,
+                                name='zero_importance_%s_%s' % (element.name, device.name))
+
+            # Do not assign 0-compatibility elements
+            # TODO: add to paper
+            elif element_device_comp[e, d] < 1e-5:
+                element_device_access[e, d] = 0
+                model.addConstr(x[e, d] == 0,
+                                name='zero_compatibility_%s_%s' % (element.name, device.name))
+    model.update()
 
     for d, device in enumerate(devices):
         if np.any(element_device_access[:, d]):
@@ -112,7 +129,7 @@ def optimize(elements, devices, users):
             user_num_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
             element_assigned_to_user[e, u] = model.addVar(vtype=GRB.BINARY)  # bool for above
             model.addConstr(user_num_element[u, e]
-                            == quicksum(x[e, d] * user_device_access[u, d]
+                            == quicksum(x[e, d] * user_device_access[u, d] * user_element_access[u, e]
                                         for d, device in enumerate(devices)))
             model.addGenConstrMin(element_assigned_to_user[e, u], [user_num_element[u, e], 1])
 
@@ -127,76 +144,56 @@ def optimize(elements, devices, users):
         #       that is, more important elements can be repeated
         user_num_replicated_elements[u] = model.addVar(vtype=GRB.CONTINUOUS)
         model.addConstr(user_num_replicated_elements[u]
-                        == quicksum(float(1. - element_user_imp[e, u]) * (user_num_element[u, e] - element_assigned_to_user[e, u])
+                        == quicksum(float(1. - element_user_imp[e, u]) *
+                                    (user_num_element[u, e] - element_assigned_to_user[e, u])
                                     for e, element in enumerate(elements)))
-
-    model.update()
-
-    # Variables to penalize assigning too many elements on a device
-    # TODO: does not allow too small devices
-    max_elements_per_device_guideline = 4
-    device_num_elements = {}
-    device_num_elements_sub_our_max = {}
-    device_num_elements_over_max = {}
-    for d, device in enumerate(devices):
-        device_num_elements[d] = model.addVar(vtype=GRB.SEMIINT, lb=0, ub=len(elements))
-        device_num_elements_sub_our_max[d] = model.addVar(vtype=GRB.INTEGER,
-                                                          lb=-len(elements)-4, ub=len(elements))
-        device_num_elements_over_max[d] = model.addVar(vtype=GRB.SEMIINT, lb=0, ub=len(elements))
-
-        model.addConstr(device_num_elements[d]
-                        == quicksum(x[e, d] for e, element in enumerate(elements)))
-        model.addConstr(device_num_elements_sub_our_max[d] + max_elements_per_device_guideline
-                        == device_num_elements[d])
-        model.addGenConstrMax(device_num_elements_over_max[d],
-                              [device_num_elements_sub_our_max[d], 0])
-
     model.update()
 
     # Objective function
     cost = 0
 
-    alpha1 = 0.20
-    alpha2 = 0.25
-    beta   = 0.25
-    gamma  = 0.15
-    delta  = 0.15
-    assert np.abs(alpha1 + alpha2 + beta + gamma + delta - 1.0) < 1e-6
+    compatibility_weight = 0.2
+    quality_weight       = 0.6
+    diversity_weight     = 0.2
+    assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
 
-    # Maximize importance in assignment
-    cost += alpha1 * quicksum(
-                element_device_imp[e, d] * x[e, d]
-                for e, _ in enumerate(elements)
-                    for d, device in enumerate(devices)
-            ) / (len(elements) * len(devices))
+    for d, _ in enumerate(devices):
+        num_elements = np.sum(element_device_access[: ,d])
+        if num_elements > 0:
+            # 1ST TERM: Maximize compatibility in assignment
+            cost += compatibility_weight * quicksum(
+                        element_device_comp[e, d] * x[e, d]
+                        for e, _ in enumerate(elements)
+                    ) / (num_elements * len(devices))
 
-    # Maximize compatibility in assignment
-    cost += alpha2 * quicksum(
-                element_device_comp[e, d] * x[e, d]
-                for e, _ in enumerate(elements)
-                    for d, device in enumerate(devices)
-            ) / (len(elements) * len(devices))
+            # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
+            # max_area = min(element._max_area, device._area)
+            # cost -= quality_weight * quicksum(
+            #             float(element_device_imp[e, d])
+            #             * (max_area - s[e, d]) / max_area
+            #             for e, element in enumerate(elements)
+            #         ) / (num_elements * len(devices))
 
-    # Minimize (A_max - A) / A_max scaled by importance
-    cost -= beta * quicksum(
-                float(element_device_imp[e, d])
-                * (min(element._max_area, device._area) - s[e, d]) / min(element._max_area, device._area)
-                * x[e, d]
-                for e, element in enumerate(elements)
-                    for d, device in enumerate(devices)
-            ) / (len(elements) * len(devices))
+            # 2ND TERM: Maximize summed area of elements weighted by importance
+            cost += quality_weight * quicksum(
+                        element_device_imp[e, d] * s[e, d]
+                        for e, element in enumerate(elements)
+                    ) / (device._area * len(devices))
+
+            # # 2ND TERM: Minimize difference to device capacity
+            # cost -= quality_weight * (device._area - quicksum(
+            #             element_device_imp[e, d] * s[e, d]
+            #             for e, element in enumerate(elements)
+            #         )) / (device._area * len(devices))
+
 
     # Penalty for assigning duplicate/replicate elements
     for u, user in enumerate(users):
-        num_user_elements = np.sum(user_element_access[u, :])
         num_user_devices = np.sum(user_device_access[u, :])
-        if num_user_elements > 0 and num_user_devices > 0:
-            cost -= gamma * user_num_replicated_elements[u] \
-                    / (num_user_elements * num_user_devices * len(users))
-
-    # Penalty for assigning too much on one device
-    cost -= delta * quicksum(device_num_elements_over_max[d]
-                             for d, device in enumerate(devices)) / len(devices)
+        sum_inv_importances = np.sum(1.0 - element_user_imp[:, u])
+        if num_user_devices > 0 and sum_inv_importances > 0.0:
+            cost -= diversity_weight * user_num_replicated_elements[u] \
+                    / (sum_inv_importances * num_user_devices * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
 
@@ -209,6 +206,10 @@ def optimize(elements, devices, users):
     model.optimize()
     if model.status != GRB.status.OPTIMAL:
         return output
+
+    # for d, device in enumerate(devices):
+    #     for e, element in enumerate(elements):
+    #         print('%s [%d] - %s [%d] has size %d' % (device.name, d, element.name, e, s[e, d].x))
 
     # Fill output with optimizer result
     for key, var in x.items():
@@ -270,11 +271,12 @@ def pre_process_objects(elements, devices, users):
     for e, element in enumerate(elements):
         for u, user in enumerate(users):
             # NOTE: we set access to False if importance 0
-            if element.user_has_access(user) and element_user_imp[e, u] > 0.0:
+            if element.user_has_access(user):
                 user_element_access[u, e] = 1
             else:
                 element_user_imp[e, u] = 0
 
+    element_user_imp = np.multiply(element_user_imp, user_element_access.transpose())
     for u, user in enumerate(users):
         element_user_imp[:, u] = normalized(element_user_imp[:, u])
 

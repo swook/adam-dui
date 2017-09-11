@@ -3,6 +3,8 @@ import math
 import sys
 sys.path.insert(0, '../optimization/')
 
+import numpy as np
+
 from user import User
 from device import Device
 from element import Element
@@ -109,8 +111,14 @@ class Scenario(object):
 
         for device, elements in sorted(output.items(), key=lambda x: x[0].name):
             print('%s <%d element(s) assigned>' % (device.name, len(elements)))
+            device_area = device._area
+            assigned_area_percentage = 0.0
             for element in elements:
-                print('> %s (s: %d)' % (element, math.sqrt(element._optimizer_size[device.name])))
+                area = element._optimizer_size[device.name]
+                area_percentage = np.round(area / float(device._area) * 100)
+                assigned_area_percentage += area_percentage
+                print('> %s (size: %.1e/%.1e = %d%%)' % (element, area, device._area, area_percentage))
+            print('Total area assigned: %d%%' % assigned_area_percentage)
             print('')
 
         # See if expectations fulfilled if specified previously
