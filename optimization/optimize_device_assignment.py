@@ -157,19 +157,21 @@ def optimize(elements, devices, users):
 
 
     # Term for assigning more less important elements for diversity
+    num_user_devices = np.sum(user_device_access, axis=1)
+    num_user_elements = np.sum(user_element_access, axis=1)
     for u, user in enumerate(users):
-        num_user_devices = np.sum(user_device_access[u, :])
-        num_user_elements = np.sum(user_element_access[u, :])
-        if num_user_devices > 0 and num_user_elements > 0:
+        if num_user_devices[u] > 0 and num_user_elements[u] > 0:
             cost += diversity_weight * quicksum(
                         # Inverse importance for less important elements
                         float(1.0 - element_user_imp[e, u]) *
                         quicksum(  # Number of elements user has access to
                             user_element_access[u, e] * element_device_access[e, d] * x[e, d]
                             for d, _ in enumerate(devices)
+                            if user_element_access[u, e] > 0 and element_device_access[e, d] > 0
                         )
                         for e, _ in enumerate(elements)
-                    ) / (num_user_elements * num_user_devices * len(users))
+                        if element_user_imp[e, u] < 1.0
+                    ) / (num_user_elements[u] * num_user_devices[u] * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
 
