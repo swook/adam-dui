@@ -135,7 +135,6 @@ scenario.run(expect={
 })
 
 check_previous_tests_for_failure()
-return
 
 """
 #########
