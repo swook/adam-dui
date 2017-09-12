@@ -165,14 +165,14 @@ def optimize(elements, devices, users):
         if num_user_devices[u] > 0 and num_user_elements[u] > 0:
             cost += diversity_weight * quicksum(
                         # Inverse importance for less important elements
-                        float(1.0 - element_user_imp[e, u]) *
+                        float((1.0 - element_user_imp[e, u]) * user_element_access[u, e]) *
                         quicksum(  # Number of elements user has access to
-                            user_element_access[u, e] * element_device_access[e, d] * x[e, d]
+                            element_device_access[e, d] * x[e, d]
                             for d, _ in enumerate(devices)
-                            if user_element_access[u, e] and element_device_access[e, d]
+                            if element_device_access[e, d]
                         )
                         for e, _ in enumerate(elements)
-                        if element_user_imp[e, u] < 1.0
+                        if user_element_access[u, e] and element_user_imp[e, u] < 1.0
                     ) / (num_user_elements[u] * num_user_devices[u] * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
