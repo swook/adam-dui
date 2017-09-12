@@ -67,7 +67,7 @@ def optimize(elements, devices, users):
     # All users must have access to a device as well as assigned elements.
     # That is, if there is even one user who is not authorised to view an element, the element
     # should not be assigned to the device.
-    element_device_access = np.ones((len(elements), len(devices)))
+    element_device_access = np.ones((len(elements), len(devices)), dtype=bool)
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
@@ -133,6 +133,7 @@ def optimize(elements, devices, users):
             cost += compatibility_weight * quicksum(
                         element_device_comp[e, d] * x[e, d]
                         for e, _ in enumerate(elements)
+                        if element_device_comp[e, d] > 0
                     ) / (num_elements * len(devices))
 
             # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
@@ -141,18 +142,21 @@ def optimize(elements, devices, users):
             #             float(element_device_imp[e, d])
             #             * (max_area - s[e, d]) / max_area
             #             for e, element in enumerate(elements)
+            #             if element_device_imp[e, d] > 0
             #         ) / (num_elements * len(devices))
 
             # 2ND TERM: Maximize summed area of elements weighted by importance
             cost += quality_weight * quicksum(
                         element_device_imp[e, d] * s[e, d]
                         for e, element in enumerate(elements)
+                        if element_device_imp[e, d] > 0
                     ) / (device._area * len(devices))
 
             # # 2ND TERM: Minimize difference to device capacity
             # cost -= quality_weight * (device._area - quicksum(
             #             element_device_imp[e, d] * s[e, d]
             #             for e, element in enumerate(elements)
+            #             if element_device_imp[e, d] > 0
             #         )) / (device._area * len(devices))
 
 
@@ -167,7 +171,7 @@ def optimize(elements, devices, users):
                         quicksum(  # Number of elements user has access to
                             user_element_access[u, e] * element_device_access[e, d] * x[e, d]
                             for d, _ in enumerate(devices)
-                            if user_element_access[u, e] > 0 and element_device_access[e, d] > 0
+                            if user_element_access[u, e] and element_device_access[e, d]
                         )
                         for e, _ in enumerate(elements)
                         if element_user_imp[e, u] < 1.0
@@ -239,13 +243,13 @@ def pre_process_objects(elements, devices, users):
 
     # Set boolean matrix of user-device access
     # TODO: try continuous numbers
-    user_device_access = np.zeros((num_users, num_devices))
+    user_device_access = np.zeros((num_users, num_devices), dtype=bool)
     for d, device in enumerate(devices):
         for user in device.users:
             user_device_access[users.index(user), d] = 1
 
     # Set boolean matrix of user-element access
-    user_element_access = np.zeros((num_users, num_elements))
+    user_element_access = np.zeros((num_users, num_elements), dtype=bool)
     for e, element in enumerate(elements):
         for u, user in enumerate(users):
             # NOTE: we set access to False if importance 0
