@@ -71,9 +71,7 @@ def optimize(elements, devices, users):
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
-            # (14) if zero compatibility element should not be placed on device
             if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
-               not np.any(user_device_access[:, d]) or \
                not np.any(user_element_access[:, e]):
                 element_device_access[e, d] = 0
 
