@@ -121,75 +121,65 @@ def optimize(elements, devices, users):
     model.update()
 
     # Elements Diversity
-    user_extra_elements = {}
     user_num_elements = {}
-    user_num_elements_sub_1 = {}
-    user_unique_elements = {}
+    user_has_element = {}
     user_total_unique_elements = {}
-    user_unassigned_elements = {}
     for u, user in enumerate(users):
         user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
         for e, element in enumerate(user_elements):
             user_num_elements[u, e] = model.addVar(vtype=GRB.SEMIINT)
-            model.addConstr(user_num_elements[u, e] == quicksum(
-                            user_element_access[u, e] * user_device_access[u, d] * x[e, d]
-                            for d, _ in enumerate(devices)))
+            model.addConstr(user_num_elements[u, e]
+                            == quicksum(x[e, d] for d, _ in enumerate(devices)
+                                        if user_device_access[u, d]))
 
-            user_num_elements_sub_1[u, e] = model.addVar(vtype=GRB.INTEGER, lb=-len(devices))
-            model.addConstr(user_num_elements_sub_1[u, e] == user_num_elements[u, e] - 1)
+            user_has_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
+            model.addConstr(user_has_element[u, e] == min(user_num_elements[u, e], 1))
 
-            user_extra_elements[u, e] = model.addVar(vtype=GRB.INTEGER)
-            model.addGenConstrMax(user_extra_elements[u, e], [user_num_elements_sub_1[u, e], 0])
-
-            user_unique_elements[u, e] = model.addVar(vtype=GRB.BINARY)
-            model.addGenConstrMax(user_unique_elements[u, e], [user_num_elements[u, e], 1])
-
-        user_total_unique_elements[u] = model.addVar(vtype=GRB.SEMIINT)
+        user_total_unique_elements[u] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
         model.addConstr(user_total_unique_elements[u] == quicksum(
-            user_unique_elements[u, e] for e, _ in enumerate(user_elements)
+            user_has_element[u, e] for e, _ in enumerate(user_elements)
         ))
 
     # Objective function
-    cost = 0
+    compatibility_term = 0.0
+    quality_term = 0.0
+    diversity_term = 0.0
 
-    compatibility_weight = 0.15
+    compatibility_weight = 0.1
     quality_weight       = 0.4
-    diversity_weight     = 0.45
+    diversity_weight     = 0.5
     assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
 
     for d, _ in enumerate(devices):
-        num_elements = np.sum(element_device_access[: ,d])
-        if num_elements > 0:
-            # 1ST TERM: Maximize compatibility in assignment
-            cost += compatibility_weight * quicksum(
-                        element_device_comp[e, d] * x[e, d]
-                        for e, _ in enumerate(elements)
-                        if element_device_comp[e, d] > 0
-                    ) / (num_elements * len(devices))
+        # 1ST TERM: Maximize compatibility in assignment
+        compatibility_term += quicksum(
+                    element_device_comp[e, d] * x[e, d]
+                    for e, _ in enumerate(elements)
+                    if element_device_comp[e, d] > 0
+                ) / (len(elements) * len(devices))
 
-            # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
-            # max_area = min(element._max_area, device._area)
-            # cost -= quality_weight * quicksum(
-            #             float(element_device_imp[e, d])
-            #             * (max_area - s[e, d]) / max_area
-            #             for e, element in enumerate(elements)
-            #             if element_device_imp[e, d] > 0
-            #         ) / (num_elements * len(devices))
+        # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
+        # max_area = min(element._max_area, device._area)
+        # cost -= quality_weight * quicksum(
+        #             float(element_device_imp[e, d])
+        #             * (max_area - s[e, d]) / max_area
+        #             for e, element in enumerate(elements)
+        #             if element_device_imp[e, d] > 0
+        #         ) / (len(elements) * len(devices))
 
-            # 2ND TERM: Maximize summed area of elements weighted by importance
-            cost += quality_weight * quicksum(
-                        element_device_imp[e, d] * s[e, d]
-                        for e, element in enumerate(elements)
-                        if element_device_imp[e, d] > 0
-                    ) / (device._area * len(devices))
+        # 2ND TERM: Maximize summed area of elements weighted by importance
+        quality_term += quicksum(
+                    element_device_imp[e, d] * s[e, d]
+                    for e, element in enumerate(elements)
+                    if element_device_imp[e, d] > 0
+                ) / (device._area * len(devices))
 
-            # # 2ND TERM: Minimize difference to device capacity
-            # cost -= quality_weight * (device._area - quicksum(
-            #             element_device_imp[e, d] * s[e, d]
-            #             for e, element in enumerate(elements)
-            #             if element_device_imp[e, d] > 0
-            #         )) / (device._area * len(devices))
-
+        # # 2ND TERM: Minimize difference to device capacity
+        # cost -= quality_weight * (device._area - quicksum(
+        #             element_device_imp[e, d] * s[e, d]
+        #             for e, element in enumerate(elements)
+        #             if element_device_imp[e, d] > 0
+        #         )) / (device._area * len(devices))
 
     """
     # Term for assigning more less important elements for diversity
@@ -209,14 +199,34 @@ def optimize(elements, devices, users):
                         if user_element_access[u, e] and element_user_imp[e, u] < 1.0
                     ) / (num_user_elements[u] * num_user_devices[u] * len(users))
     """
+
     for u, user in enumerate(users):
         # user_devices = [device for d, device in enumerate(devices) if user_device_access[u, d]]
-        user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-        if len(user_elements) == 0:
-            continue
-        cost += diversity_weight * user_total_unique_elements[u] / (len(elements) * len(users))
+        # user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
+        # if len(user_elements) == 0:
+        #     continue
+        diversity_term += user_total_unique_elements[u] / (len(elements) * len(users))
 
-    model.setObjective(cost, GRB.MAXIMIZE)
+    # Register objective function terms
+    model.ModelSense = GRB.MAXIMIZE
+    model.setObjectiveN(
+        quality_term,
+        index=0,
+        weight=quality_weight,
+        priority=2,
+    )
+    model.setObjectiveN(
+        compatibility_term,
+        index=1,
+        weight=compatibility_weight,
+        priority=2,
+    )
+    model.setObjectiveN(
+        diversity_term,
+        index=2,
+        weight=diversity_weight,
+        priority=1,
+    )
 
     # Create output list of elements (sorted)
     output = {}
@@ -240,19 +250,24 @@ def optimize(elements, devices, users):
 
     # for u, user in enumerate(users):
     #     user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-    #     for e, _ in enumerate(user_elements):
-    #         if user_element_access[u, e]:
-    #             print('(%d,%d): max(%d - 1 = %d, 0) = %d' %
-    #                   (e, d, user_num_elements[u, e].x, user_num_elements_sub_1[u, e].x,
-    #                    user_extra_elements[u, e].x))
+    #     for e, element in enumerate(user_elements):
+    #         print('user_num_elements[%s, %s] = %d' % (user.name, element.name, user_num_elements[u, e].x))
+    #         print('user_has_element[%s, %s] = %d' % (user.name, element.name, user_has_element[u, e].x))
+    # for u, user in enumerate(users):
+    #     print('user_total_unique_elements[%s] = %d' % (user.name, user_total_unique_elements[u].x))
 
-    for u, user in enumerate(users):
-        print('%s has %d elements assigned:\n> %s' %
-              (user.name, user_total_unique_elements[u].x,
-               ', '.join(np.unique(sorted([element.name
-                         for d, _ in enumerate(devices)
-                         for e, element in enumerate(elements)
-                         if x[e, d].x == 1 and user_device_access[u, d]])))))
+    # print('')
+    # for u, user in enumerate(users):
+    #     user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
+    #     print('%s has access to: %s' % (user.name, ', '.join([e.name for e in user_elements])))
+
+    # for u, user in enumerate(users):
+    #     print('%s has %d elements assigned:\n> %s' %
+    #           (user.name, user_total_unique_elements[u].x,
+    #            ', '.join(np.unique(sorted([element.name
+    #                      for d, _ in enumerate(devices)
+    #                      for e, element in enumerate(elements)
+    #                      if x[e, d].x == 1 and user_device_access[u, d]])))))
 
     # Fill output with optimizer result
     for key, var in x.items():
@@ -337,9 +352,13 @@ def pre_process_objects(elements, devices, users):
     # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
-            comp = np.multiply(element_user_imp[e, :], user_device_access[:, d])
-            if np.count_nonzero(user_device_access[:, d]) >= 2 and np.count_nonzero(comp) <= 1:
+            comp = np.multiply(user_element_access[:, e], user_device_access[:, d])
+            if np.count_nonzero(user_device_access[:, d]) > 1 and np.count_nonzero(comp) == 1:
                 element_device_imp[e, d] = 0
+                for u, v in enumerate(comp):
+                    if v == 0:
+                        user_element_access[u, e] = 0
+        element_device_imp[:, d] = normalized(element_device_imp[:, d])
 
     # Add noise to prevent stalemates
     def add_noise(array):
