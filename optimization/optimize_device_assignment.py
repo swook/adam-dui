@@ -322,10 +322,23 @@ def pre_process_objects(elements, devices, users):
     for u, user in enumerate(users):
         element_user_imp[:, u] = normalized(element_user_imp[:, u])
 
+    # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
+    for e, element in enumerate(elements):
+        for u, user in enumerate(users):
+            if element_user_imp[e, u] < 1e-6:
+                user_element_access[u, e] = 0
+
     # Normalize element importances per device
     element_device_imp = np.asmatrix(element_user_imp) * np.asmatrix(user_device_access)
     for d, device in enumerate(devices):
         element_device_imp[:, d] = normalized(element_device_imp[:, d])
+
+    # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
+    for d, device in enumerate(devices):
+        for e, element in enumerate(elements):
+            comp = np.multiply(element_user_imp[e, :], user_device_access[:, d])
+            if np.count_nonzero(user_device_access[:, d]) >= 2 and np.count_nonzero(comp) <= 1:
+                element_device_imp[e, d] = 0
 
     # Add noise to prevent stalemates
     def add_noise(array):
