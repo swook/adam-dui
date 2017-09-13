@@ -19,6 +19,10 @@ def optimize(elements, devices, users):
             Device3: [Element1],
         }
     """
+    elements.sort(key=lambda x: x.name)
+    devices.sort(key=lambda x: x.name)
+    users.sort(key=lambda x: x.name)
+
     # Is there sufficient information to solve the assignment problem?
     if len(users) == 0 or len(devices) == 0 or len(elements) == 0:
         output = {}
