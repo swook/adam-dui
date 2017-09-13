@@ -109,11 +109,12 @@ def optimize(elements, devices, users):
     model.update()
 
     for d, device in enumerate(devices):
-        if np.any(element_device_access[:, d]):
-            # (12) a device which is accessible by a user should have at least one element
-            model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
-                            'at_least_one_widget_constraint_%s' % device.name)
-        else:
+        # if np.any(element_device_access[:, d]):
+        #     # (12) a device which is accessible by a user should have at least one element
+        #     model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
+        #                     'at_least_one_widget_constraint_%s' % device.name)
+        # else:
+        if not np.any(element_device_access[:, d]):
             # (12) a device which is not accessible by any user should not have a element
             model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
                             'no_element_constraint_%s' % device.name)
