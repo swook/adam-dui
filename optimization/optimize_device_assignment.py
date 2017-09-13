@@ -214,7 +214,7 @@ def optimize(elements, devices, users):
         user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
         if len(user_elements) == 0:
             continue
-        cost += diversity_weight * user_total_unique_elements[u] / (len(user_elements) * len(users))
+        cost += diversity_weight * user_total_unique_elements[u] / (len(elements) * len(users))
 
     model.setObjective(cost, GRB.MAXIMIZE)
 
