@@ -34,6 +34,12 @@ def optimize(elements, devices, users):
     element_user_imp, element_device_imp, element_device_comp, user_device_access, \
     user_element_access = pre_process_objects(elements, devices, users)
 
+    # np.set_printoptions(precision=1)
+    # print('element_user_imp:\n%s' % element_user_imp)
+    # print('element_device_comp:\n%s' % element_device_comp)
+    # print('element_device_imp:\n%s' % element_device_imp)
+    # print('user_device_access:\n%s' % user_device_access)
+
     # Create empty model
     model = Model('device_assignment')
     model.params.LogToConsole = 0  # Uncomment to see logs in console
@@ -189,6 +195,12 @@ def optimize(elements, devices, users):
     #     for e, element in enumerate(elements):
     #         print('%s [%d] - %s [%d] has size %d' % (device.name, d, element.name, e, s[e, d].x))
 
+    # for e, element in enumerate(elements):
+    #     for d, device in enumerate(devices):
+    #         x_ = x[e,d].x
+    #         s_ = s[e,d].x
+    #         print('(%d,%d): x = %d, s = %d' % (e, d, x_, s_))
+
     # Fill output with optimizer result
     for key, var in x.items():
         if var.x != 1:  # Ignore if not 1.0 (assignment)
@@ -223,7 +235,7 @@ def pre_process_objects(elements, devices, users):
         return vector
 
     # Retrieve, store and normalize user-specific element importance
-    element_user_imp = np.ones((num_elements, num_users))
+    element_user_imp = np.zeros((num_elements, num_users))
     element_name_index = dict((element.name, i) for i, element in enumerate(elements))
     for u, user in enumerate(users):
         element_user_imp[:, u] = [element.importance for element in elements]

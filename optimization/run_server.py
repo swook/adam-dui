@@ -22,6 +22,7 @@ class SimpleEcho(WebSocket):
         # Handle proper input
         try:
             web_output = optimize.handle_web_input(self.data)
+            # logger.info(web_output)
             self.sendMessage(web_output)
         except:
             tb = traceback.format_exc()
