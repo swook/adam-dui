@@ -82,7 +82,7 @@ def optimize(elements, devices, users):
         for e, element in enumerate(elements):
             # (13) user has no access to element so don't assign to user's device
             if np.any(user_device_access[:, d] > user_element_access[:, e]) or \
-               not np.any(user_element_access[:, e]):
+               not np.any(np.dot(user_device_access[:, d], user_element_access[:, e])):
                 element_device_access[e, d] = 0
 
     model.update()
