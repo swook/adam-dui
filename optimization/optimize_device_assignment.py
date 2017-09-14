@@ -152,11 +152,9 @@ def optimize(elements, devices, users):
         model.addConstr(min_ratio_unique_elements <= user_num_unique_elements[u] / len(user_elements))
 
     # Objective function
-    compatibility_term  = 0.0
     quality_term        = 0.0
     diversity_term      = 0.0
 
-    compatibility_weight  = 0.0
     quality_weight        = 0.8
     diversity_weight      = 0.2
     # assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
@@ -166,63 +164,19 @@ def optimize(elements, devices, users):
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
 
         for d, device in user_devices:
-            # 1ST TERM: Maximize compatibility in assignment
-            compatibility_term += quicksum(
-                        element_device_comp[e, d] * x[e, d]
-                        for e, element in user_elements
-                    ) / (len(user_elements) * len(users))
-
-            # 2ND TERM: Maximize summed area of elements weighted by importance
+            # 1ST TERM
+            # Maximize summed area of elements weighted by importance
+            # Also maximize compatibility in assignment
             quality_term += quicksum(
                         element_device_comp[e, d] * element_device_imp[e, d] * s[e, d]
                         for e, element in user_elements
                     ) / (device._area * len(users))
-
-    """
-    for d, device in enumerate(devices):
-        # 1ST TERM: Maximize compatibility in assignment
-        compatibility_term += quicksum(
-                    element_device_comp[e, d] * x[e, d]
-                    for e, _ in enumerate(elements)
-                ) / (len(elements) * len(devices))
-
-        # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
-        # max_area = min(element._max_area, device._area)
-        # quality_term -= quicksum(
-        #             float(element_device_imp[e, d])
-        #             * (max_area - s[e, d]) / max_area
-        #             for e, element in enumerate(elements)
-        #             if element_device_imp[e, d] > 0
-        #         ) / (len(elements) * len(devices))
-
-        # 2ND TERM: Maximize summed area of elements weighted by importance
-        quality_term += quicksum(
-                    element_device_imp[e, d] * s[e, d]
-                    for e, element in enumerate(elements)
-                ) / (device._area * len(devices))
-
-        # # 2ND TERM: Minimize difference to device capacity
-        # quality_term -= (device._area - quicksum(
-        #             element_device_imp[e, d] * s[e, d]
-        #             for e, element in enumerate(elements)
-        #             if element_device_imp[e, d] > 0
-        #         )) / (device._area * len(devices))
-    """
 
     # Term for trying to assign all available elements
     for u, user in enumerate(users):
         user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
         if len(user_devices) > 0 and len(user_elements) > 0:
-            """
-            # VERSION 1: Penalizes replication (Anna)
-            diversity_term -= quicksum(
-                user_num_replicated_elements[u, e]
-                for e, element in user_elements
-            ) / (len(user_elements) * len(users))
-            """
-
-            # VERSION 2: Maximize elements coverage
             diversity_term += quicksum(
                 user_has_element[u, e]
                 for e, element in user_elements
@@ -237,19 +191,13 @@ def optimize(elements, devices, users):
         quality_term,
         index=0,
         weight=quality_weight,
-        priority=2,
-    )
-    model.setObjectiveN(
-        compatibility_term,
-        index=1,
-        weight=compatibility_weight,
-        priority=2,
+        priority=0,
     )
     model.setObjectiveN(
         diversity_term,
         index=1,
         weight=diversity_weight,
-        priority=2,
+        priority=0,
     )
 
     # Create output list of elements (sorted)
