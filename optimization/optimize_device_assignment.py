@@ -156,9 +156,9 @@ def optimize(elements, devices, users):
     quality_term        = 0.0
     diversity_term      = 0.0
 
-    compatibility_weight  = 0.3
-    quality_weight        = 0.4
-    diversity_weight      = 0.3
+    compatibility_weight  = 0.0
+    quality_weight        = 0.8
+    diversity_weight      = 0.2
     # assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
 
     for u, user in enumerate(users):
@@ -174,7 +174,7 @@ def optimize(elements, devices, users):
 
             # 2ND TERM: Maximize summed area of elements weighted by importance
             quality_term += quicksum(
-                        element_device_imp[e, d] * s[e, d]
+                        element_device_comp[e, d] * element_device_imp[e, d] * s[e, d]
                         for e, element in user_elements
                     ) / (device._area * len(users))
 
