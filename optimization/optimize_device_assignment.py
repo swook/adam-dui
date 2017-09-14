@@ -125,19 +125,21 @@ def optimize(elements, devices, users):
     user_has_element = {}
     user_total_unique_elements = {}
     for u, user in enumerate(users):
-        user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-        for e, element in enumerate(user_elements):
+        user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
+        user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
+        for e, element in user_elements:
             user_num_elements[u, e] = model.addVar(vtype=GRB.SEMIINT)
             model.addConstr(user_num_elements[u, e]
-                            == quicksum(x[e, d] for d, _ in enumerate(devices)
-                                        if user_device_access[u, d]))
+                            == quicksum(x[e, d] for d, _ in user_devices))
 
-            user_has_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
+            user_has_element[u, e] = model.addVar(vtype=GRB.BINARY)
+            # model.addGenConstrMin(user_has_element[u, e], [user_num_elements[u, e], 1])
             model.addConstr(user_has_element[u, e] == min(user_num_elements[u, e], 1))
+            model.addConstr((user_num_elements[u, e] == 0) >> (user_has_element[u, e] == 0))
 
         user_total_unique_elements[u] = model.addVar(vtype=GRB.SEMIINT, ub=len(elements))
         model.addConstr(user_total_unique_elements[u] == quicksum(
-            user_has_element[u, e] for e, _ in enumerate(user_elements)
+            user_has_element[u, e] for e, _ in user_elements
         ))
 
     # Objective function
@@ -145,12 +147,12 @@ def optimize(elements, devices, users):
     quality_term = 0.0
     diversity_term = 0.0
 
-    compatibility_weight = 0.1
-    quality_weight       = 0.4
+    compatibility_weight = 0.3
+    quality_weight       = 0.7
     diversity_weight     = 0.5
-    assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
+    assert np.abs(compatibility_weight + quality_weight - 1.0) < 1e-6
 
-    for d, _ in enumerate(devices):
+    for d, device in enumerate(devices):
         # 1ST TERM: Maximize compatibility in assignment
         compatibility_term += quicksum(
                     element_device_comp[e, d] * x[e, d]
@@ -160,7 +162,7 @@ def optimize(elements, devices, users):
 
         # # 2ND TERM: Minimize (A_max - A) / A_max scaled by importance
         # max_area = min(element._max_area, device._area)
-        # cost -= quality_weight * quicksum(
+        # quality_term -= quicksum(
         #             float(element_device_imp[e, d])
         #             * (max_area - s[e, d]) / max_area
         #             for e, element in enumerate(elements)
@@ -175,7 +177,7 @@ def optimize(elements, devices, users):
                 ) / (device._area * len(devices))
 
         # # 2ND TERM: Minimize difference to device capacity
-        # cost -= quality_weight * (device._area - quicksum(
+        # quality_term -= (device._area - quicksum(
         #             element_device_imp[e, d] * s[e, d]
         #             for e, element in enumerate(elements)
         #             if element_device_imp[e, d] > 0
@@ -201,10 +203,10 @@ def optimize(elements, devices, users):
     """
 
     for u, user in enumerate(users):
-        # user_devices = [device for d, device in enumerate(devices) if user_device_access[u, d]]
-        # user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-        # if len(user_elements) == 0:
-        #     continue
+        # user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
+        user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
+        if len(user_elements) == 0:
+            continue
         diversity_term += user_total_unique_elements[u] / (len(elements) * len(users))
 
     # Register objective function terms
@@ -248,26 +250,26 @@ def optimize(elements, devices, users):
     #         s_ = s[e,d].x
     #         print('(%d,%d): x = %d, s = %d' % (e, d, x_, s_))
 
-    # for u, user in enumerate(users):
-    #     user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-    #     for e, element in enumerate(user_elements):
-    #         print('user_num_elements[%s, %s] = %d' % (user.name, element.name, user_num_elements[u, e].x))
-    #         print('user_has_element[%s, %s] = %d' % (user.name, element.name, user_has_element[u, e].x))
-    # for u, user in enumerate(users):
-    #     print('user_total_unique_elements[%s] = %d' % (user.name, user_total_unique_elements[u].x))
+    for u, user in enumerate(users):
+        user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
+        for e, element in user_elements:
+            print('user_num_elements[%s, %s] = %d' % (user.name, element.name, user_num_elements[u, e].x))
+            print('user_has_element[%s, %s] = %d' % (user.name, element.name, user_has_element[u, e].x))
+    for u, user in enumerate(users):
+        print('user_total_unique_elements[%s] = %d' % (user.name, user_total_unique_elements[u].x))
 
     # print('')
     # for u, user in enumerate(users):
-    #     user_elements = [element for e, element in enumerate(elements) if user_element_access[u, e]]
-    #     print('%s has access to: %s' % (user.name, ', '.join([e.name for e in user_elements])))
+    #     user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
+    #     print('%s has access to: %s' % (user.name, ', '.join([element.name for e, element in user_elements])))
 
-    # for u, user in enumerate(users):
-    #     print('%s has %d elements assigned:\n> %s' %
-    #           (user.name, user_total_unique_elements[u].x,
-    #            ', '.join(np.unique(sorted([element.name
-    #                      for d, _ in enumerate(devices)
-    #                      for e, element in enumerate(elements)
-    #                      if x[e, d].x == 1 and user_device_access[u, d]])))))
+    for u, user in enumerate(users):
+        print('%s has %d elements assigned:\n> %s' %
+              (user.name, user_total_unique_elements[u].x,
+               ', '.join(np.unique(sorted([element.name
+                         for d, _ in enumerate(devices)
+                         for e, element in enumerate(elements)
+                         if x[e, d].x == 1 and user_device_access[u, d]])))))
 
     # Fill output with optimizer result
     for key, var in x.items():
