@@ -318,7 +318,9 @@ def pre_process_objects(elements, devices, users):
     # Normalize element importances per device
     element_device_imp = np.asmatrix(element_user_imp) * np.asmatrix(user_device_access)
     for d, device in enumerate(devices):
-        element_device_imp[:, d] = normalized(element_device_imp[:, d])
+        num_users_on_device = np.sum(user_device_access[:, d])
+        if num_users_on_device > 0:
+            element_device_imp[:, d] /= num_users_on_device
 
     # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
     for d, device in enumerate(devices):
