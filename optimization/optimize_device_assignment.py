@@ -149,7 +149,9 @@ def optimize(elements, devices, users):
     min_ratio_unique_elements = model.addVar(vtype=GRB.CONTINUOUS, lb=0.0)
     for u, user in enumerate(users):
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
-        model.addConstr(min_ratio_unique_elements <= user_num_unique_elements[u] / len(user_elements))
+        num_user_elements = len(num_user_elements)
+        if num_user_elements > 0:
+            model.addConstr(min_ratio_unique_elements <= user_num_unique_elements[u] / num_user_elements)
 
     # Objective function
     quality_term        = 0.0
