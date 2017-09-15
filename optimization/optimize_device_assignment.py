@@ -239,7 +239,10 @@ def optimize(elements, devices, users):
     print('Coverages:')
     for u, user in enumerate(users):
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
-        print('- %s: %.2f' % (user.name, user_num_unique_elements[u].x / len(user_elements)))
+        if len(user_elements) > 0:
+            print('- %s: %.2f' % (user.name, user_num_unique_elements[u].x / len(user_elements)))
+        else:
+            print('- %s: 0.0' % user.name)
     print('- min: %.2f' % min_ratio_unique_elements.x)
 
     # Fill output with optimizer result
