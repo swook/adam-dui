@@ -159,18 +159,14 @@ def optimize(elements, devices, users):
     diversity_weight      = 0.2
     # assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
 
-    for u, user in enumerate(users):
-        user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
-        user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
-
-        for d, device in user_devices:
-            # 1ST TERM
-            # Maximize summed area of elements weighted by importance
-            # Also maximize compatibility in assignment
-            quality_term += quicksum(
-                        element_device_comp[e, d] * element_device_imp[e, d] * s[e, d]
-                        for e, element in user_elements
-                    ) / (device._area * len(users))
+    for d, device in enumerate(devices):
+        # 1ST TERM
+        # Maximize summed area of elements weighted by importance
+        # Also maximize compatibility in assignment
+        quality_term += quicksum(
+                    element_device_comp[e, d] * element_device_imp[e, d] * s[e, d]
+                    for e, element in enumerate(elements)
+                ) / (device._area)
 
     # Term for trying to assign all available elements
     for u, user in enumerate(users):
