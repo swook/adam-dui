@@ -153,11 +153,11 @@ def optimize(elements, devices, users):
 
     # Objective function
     quality_term        = 0.0
-    diversity_term      = 0.0
+    completeness_term      = 0.0
 
     quality_weight        = 0.8
-    diversity_weight      = 0.2
-    # assert np.abs(compatibility_weight + quality_weight + diversity_weight - 1.0) < 1e-6
+    completeness_weight      = 0.2
+    # assert np.abs(compatibility_weight + quality_weight + completeness_weight - 1.0) < 1e-6
 
     for d, device in enumerate(devices):
         # 1ST TERM
@@ -173,13 +173,13 @@ def optimize(elements, devices, users):
         user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
         if len(user_devices) > 0 and len(user_elements) > 0:
-            diversity_term += quicksum(
+            completeness_term += quicksum(
                 user_has_element[u, e]
                 for e, element in user_elements
             ) / (len(user_elements) * len(users))
 
     # Additional term: ensure minimum coverage is optimized more
-    diversity_term += min_ratio_unique_elements
+    completeness_term += min_ratio_unique_elements
 
     # Register objective function terms
     model.ModelSense = GRB.MAXIMIZE
@@ -190,9 +190,9 @@ def optimize(elements, devices, users):
         priority=0,
     )
     model.setObjectiveN(
-        diversity_term,
+        completeness_term,
         index=1,
-        weight=diversity_weight,
+        weight=completeness_weight,
         priority=0,
     )
 
