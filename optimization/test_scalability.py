@@ -21,7 +21,8 @@ def vary_elements():
     users = generate_users(10)
     assign_all_users_to_devices(users, devices)
 
-    x = np.linspace(1, 10*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x[0] = 1
     y = [0] * n
 
     for i in range(n):
@@ -43,16 +44,17 @@ def vary_elements():
 def vary_devices():
     n = 100
     elements = generate_elements(10)
+    users = generate_users(10, elements=elements)
 
-    x = range(1, n+1)
+    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x[0] = 1
     y = [0] * n
 
     for i in range(n):
         time_diffs = []
         j = 0
         while j < num_trials:
-            devices = generate_devices(5 * x[i])
-            users = generate_users(x[i], elements=elements)
+            devices = generate_devices(x[i])
             assign_all_users_to_devices(users, devices)
 
             time_diff, success = timed_optimize(elements, devices, users)
@@ -62,7 +64,7 @@ def vary_devices():
             time_diffs.append(time_diff)
             j += 1
         y[i] = np.mean(time_diffs)
-        print('%d devices: %.2fs' % (5 * x[i], y[i]))
+        print('%d devices: %.2fs' % (x[i], y[i]))
     np.savetxt('vary_devices.txt', np.stack([x, y], axis=1))
 
 def vary_users():
@@ -70,7 +72,8 @@ def vary_users():
     devices = generate_devices(50)
     elements = generate_elements(10)
 
-    x = np.linspace(1, 10*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 10*n, num=n, dtype=np.int64)
+    x[0] = 1
     y = [0] * n
 
     for i in range(n):
@@ -89,7 +92,37 @@ def vary_users():
         y[i] = np.mean(time_diffs)
         print('%d users: %.2fs' % (x[i], y[i]))
     np.savetxt('vary_users.txt', np.stack([x, y], axis=1))
-    pass
+
+def vary_users_and_devices():
+    n = 100
+    elements = generate_elements(10)
+
+    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x[0] = 1
+    y = [0] * n
+
+    for i in range(n):
+        time_diffs = []
+        j = 0
+        while j < num_trials:
+            # 2 devices per user + 1 shared device per 5 users
+            num_devices = 2 * x[i] + x[i] / 5
+            devices = generate_devices(num_devices)
+            users = generate_users(x[i], elements=elements)
+            assign_all_users_to_devices(users, devices)
+            for k in range(x[i]):
+                devices[2*k].users = [users[k]]
+                devices[2*k+1].users = [users[k]]
+
+            time_diff, success = timed_optimize(elements, devices, users)
+            if not success:
+                print('%d failed' % x[i])
+                continue
+            time_diffs.append(time_diff)
+            j += 1
+        y[i] = np.mean(time_diffs)
+        print('%d users & %d devices: %.2fs' % (x[i], num_devices, y[i]))
+    np.savetxt('vary_users_and_devices.txt', np.stack([x, y], axis=1))
 
 def generate_elements(n):
     rands_per_entry = 5
@@ -181,6 +214,8 @@ if __name__ == '__main__':
     vary_elements()
     vary_devices()
     vary_users()
+    vary_users_and_devices()
     plot(vary_elements, xlabel='Number of Elements')
     plot(vary_devices, xlabel='Number of Devices')
     plot(vary_users, xlabel='Number of Users')
+    plot(vary_users_and_devices, xlabel='Number of Users')
