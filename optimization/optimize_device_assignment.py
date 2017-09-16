@@ -284,7 +284,8 @@ def pre_process_objects(elements, devices, users):
     for u, user in enumerate(users):
         element_user_imp[:, u] = [element.importance for element in elements]
         for element_name, importance in user.importance.iteritems():
-            element_user_imp[element_name_index[element_name], u] = importance
+            if element_name in element_name_index:
+                element_user_imp[element_name_index[element_name], u] = importance
 
     # Calculate and create normalized matrix of element-device compatibility
     element_device_comp = np.zeros((num_elements, num_devices))
