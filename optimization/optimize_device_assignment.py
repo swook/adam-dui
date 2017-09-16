@@ -1,7 +1,8 @@
 # flake8: noqa
+import time
+
 from gurobipy import *
 import numpy as np
-
 
 def optimize(elements, devices, users):
     """Perform assignment of elements to devices.
@@ -28,11 +29,13 @@ def optimize(elements, devices, users):
         output = {}
         for device in devices:
             output[device] = []
-        return output
+        return output, 0.0
 
     # Form input data
     element_user_imp, element_device_imp, element_device_comp, user_device_access, \
     user_element_access = pre_process_objects(elements, devices, users)
+
+    start_time = time.time()
 
     # np.set_printoptions(precision=1)
     # print('element_user_imp:\n%s' % element_user_imp)
@@ -42,7 +45,7 @@ def optimize(elements, devices, users):
 
     # Create empty model
     model = Model('device_assignment')
-    # model.params.LogToConsole = 0  # Uncomment to see logs in console
+    model.params.LogToConsole = 0  # Uncomment to see logs in console
 
     # Add decision variables
     x = {}
@@ -205,8 +208,10 @@ def optimize(elements, devices, users):
 
     # Solve
     model.optimize()
+    end_time = time.time()
+    time_taken = end_time - start_time
     if model.status != GRB.status.OPTIMAL:
-        return output
+        return output, time_taken
 
     # for d, device in enumerate(devices):
     #     for e, element in enumerate(elements):
@@ -257,7 +262,7 @@ def optimize(elements, devices, users):
             element._optimizer_size = {}
         element._optimizer_size[device.name] = s[e, d].x
         output[device].append(element)
-    return output
+    return output, time_taken
 
 
 def pre_process_objects(elements, devices, users):

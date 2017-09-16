@@ -93,7 +93,7 @@ class Scenario(object):
     def run(self, expect={}):
         """Run optimizer and print inputs and output. Optionally run tests on outputs."""
         elements, devices, users = self.elements.values(), self.devices.values(), self.users.values()
-        output = optimize_device_assignment.optimize(elements, devices, users)
+        output, _ = optimize_device_assignment.optimize(elements, devices, users)
 
         print('\nInputs')
         print('=======\n')

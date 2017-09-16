@@ -24,7 +24,7 @@ Output:
 '''
 def optimize(elements, devices, users):
     # Run 1st optimization
-    output = optimize_device_assignment.optimize(elements, devices, users)
+    output, _ = optimize_device_assignment.optimize(elements, devices, users)
 
     # # Run 2nd optimization
     # for device_class, elements in output.items():
