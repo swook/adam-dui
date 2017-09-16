@@ -154,11 +154,9 @@ def assign_all_users_to_devices(users, devices):
         device.users = users
 
 def timed_optimize(elements, devices, users):
-    start_time = time.time()
-    output = optimize(elements, devices, users)
-    end_time = time.time()
+    output, time_taken = optimize(elements, devices, users)
     if np.any([len(v) for k, v in output.iteritems()]):
-        return end_time - start_time, True
+        return time_taken, True
     else:
         return 0.0, False
 
