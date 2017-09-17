@@ -203,41 +203,49 @@ def random_name():
 def random_properties():
     return Properties(*np.random.random_integers(0, 5, (4, 1)))
 
-def plot(func, xlabel, ylabel='Time to Solution / s', legend=False):
+def plot(func, xlabel, ylabel='Time to Solution / s'):
     log = np.loadtxt('%s.txt' % func.__name__)
     x = log[:, 0]
     y = log[:, 1]
 
     # Define figure
     fig = plt.figure(figsize=(3, 1.6))
-    fig.subplots_adjust(bottom=0.13, left=0.17, top=0.99, right=0.98)
+    fig.subplots_adjust(bottom=0.12, left=0.16, top=0.99, right=0.97)
 
     # Plot data points
-    plt.plot(x, y, 'r.-', label='timings',
-             aa=True)
+    plt.plot(x, y, 'r.-', aa=True)
 
     # Regression fit
-    p = np.polyfit(x, y, deg=2)
-    plt.plot(x, p[0]*x**2 + p[1]*x**1 + p[2], 'g', label='quadratic fit',
-             aa=True,)
+    if func.__name__ == 'vary_users':
+        p = np.polyfit(x, y, deg=1)
+        plt.plot(x, p[0]*x**1 + p[1], 'g', label='linear fit', aa=True)
+    else:
+        p = np.polyfit(x, y, deg=2)
+        plt.plot(x, p[0]*x**2 + p[1]*x**1 + p[2], 'b', label='quadratic fit', aa=True)
 
     # Labels
-    # plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if legend:
-        plt.legend(frameon=False)
+    plt.xlabel(xlabel)
+    if func.__name__ == 'vary_elements':
+        plt.ylabel(ylabel)
+    plt.legend(frameon=False)
 
     # Axes adjustments
     ax = plt.gca()
+    ax.yaxis.set_label_coords(-0.13, 0.43)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.set_xlim((0.0, ax.get_xlim()[1]))
     ax.set_ylim((0.0, ax.get_ylim()[1]))
     x_max = np.max(x)
     if x_max > 1000:
-        plt.xticks(np.arange(0, x_max + 1, 1000))
+        plt.xticks(np.arange(0, x_max + 1, 2000))
     else:
         plt.xticks(np.arange(0, x_max + 1, 100))
+    y_max = np.max(y)
+    if y_max > 10.0:
+        plt.yticks(np.arange(0, y_max + 0.1, 10))
+    else:
+        plt.yticks(np.arange(0, y_max + 0.1, 1))
 
     # Cosmetic changes
     # plt.grid(alpha=0.1, color='b')
@@ -249,9 +257,9 @@ def plot(func, xlabel, ylabel='Time to Solution / s', legend=False):
 if __name__ == '__main__':
     # vary_elements()
     # vary_devices()
-    # vary_users()  # TODO
-    vary_users_and_devices()  # TODO
-    plot(vary_elements, xlabel='Number of Elements', legend=True)
+    # vary_users()
+    # vary_users_and_devices()
+    plot(vary_elements, xlabel='Number of Elements')
     plot(vary_devices, xlabel='Number of Devices')
-    # plot(vary_users, xlabel='Number of Users')
+    plot(vary_users, xlabel='Number of Users')
     # plot(vary_users_and_devices, xlabel='Number of Users')
