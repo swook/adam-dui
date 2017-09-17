@@ -237,8 +237,10 @@ def plot(func, xlabel, ylabel='Time to Solution / s'):
     ax.set_xlim((0.0, ax.get_xlim()[1]))
     ax.set_ylim((0.0, ax.get_ylim()[1]))
     x_max = np.max(x)
-    if x_max > 1000:
+    if x_max >= 10000:
         plt.xticks(np.arange(0, x_max + 1, 2000))
+    elif x_max >= 2000:
+        plt.xticks(np.arange(0, x_max + 1, 400))
     else:
         plt.xticks(np.arange(0, x_max + 1, 100))
     y_max = np.max(y)
@@ -262,4 +264,4 @@ if __name__ == '__main__':
     plot(vary_elements, xlabel='Number of Elements')
     plot(vary_devices, xlabel='Number of Devices')
     plot(vary_users, xlabel='Number of Users')
-    # plot(vary_users_and_devices, xlabel='Number of Users')
+    plot(vary_users_and_devices, xlabel='Number of Users')
