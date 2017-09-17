@@ -17,11 +17,11 @@ num_trials = 10
 
 def vary_elements():
     n = 100
-    devices = generate_devices(50)
+    devices = generate_devices(20)
     users = generate_users(10)
     assign_all_users_to_devices(users, devices)
 
-    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 5*n, num=n+1, dtype=np.int64)
     x[0] = 1
     y = [0] * n
 
@@ -43,10 +43,10 @@ def vary_elements():
 
 def vary_devices():
     n = 100
-    elements = generate_elements(10)
+    elements = generate_elements(20)
     users = generate_users(10, elements=elements)
 
-    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 5*n, num=n+1, dtype=np.int64)
     x[0] = 1
     y = [0] * n
 
@@ -68,11 +68,11 @@ def vary_devices():
     np.savetxt('vary_devices.txt', np.stack([x, y], axis=1))
 
 def vary_users():
-    n = 1000
+    n = 20
     devices = generate_devices(50)
-    elements = generate_elements(10)
+    elements = generate_elements(20)
 
-    x = np.linspace(0, 10*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 500*n, num=n+1, dtype=np.int64)
     x[0] = 1
     y = [0] * n
 
@@ -94,10 +94,10 @@ def vary_users():
     np.savetxt('vary_users.txt', np.stack([x, y], axis=1))
 
 def vary_users_and_devices():
-    n = 100
+    n = 20
     elements = generate_elements(10)
 
-    x = np.linspace(0, 5*n, num=n, dtype=np.int64)
+    x = np.linspace(0, 100*n, num=n+1, dtype=np.int64)
     x[0] = 1
     y = [0] * n
 
@@ -187,8 +187,11 @@ def assign_all_users_to_devices(users, devices):
         device.users = users
 
 def timed_optimize(elements, devices, users):
+    start_time = time.time()
     output, time_taken = optimize(elements, devices, users)
+    end_time = time.time()
     if np.any([len(v) for k, v in output.iteritems()]):
+        print('total time taken: %.2fs' % (end_time - start_time))
         return time_taken, True
     else:
         return 0.0, False
@@ -200,22 +203,55 @@ def random_name():
 def random_properties():
     return Properties(*np.random.random_integers(0, 5, (4, 1)))
 
-def plot(func, xlabel, ylabel='Time to Solution / s'):
+def plot(func, xlabel, ylabel='Time to Solution / s', legend=False):
     log = np.loadtxt('%s.txt' % func.__name__)
     x = log[:, 0]
     y = log[:, 1]
-    plt.plot(x, y)
-    plt.xlabel(xlabel)
+
+    # Define figure
+    fig = plt.figure(figsize=(3, 1.6))
+    fig.subplots_adjust(bottom=0.13, left=0.17, top=0.99, right=0.98)
+
+    # Plot data points
+    plt.plot(x, y, 'r.-', label='timings',
+             aa=True)
+
+    # Regression fit
+    p = np.polyfit(x, y, deg=2)
+    plt.plot(x, p[0]*x**2 + p[1]*x**1 + p[2], 'g', label='quadratic fit',
+             aa=True,)
+
+    # Labels
+    # plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if legend:
+        plt.legend(frameon=False)
+
+    # Axes adjustments
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.set_xlim((0.0, ax.get_xlim()[1]))
+    ax.set_ylim((0.0, ax.get_ylim()[1]))
+    x_max = np.max(x)
+    if x_max > 1000:
+        plt.xticks(np.arange(0, x_max + 1, 1000))
+    else:
+        plt.xticks(np.arange(0, x_max + 1, 100))
+
+    # Cosmetic changes
+    # plt.grid(alpha=0.1, color='b')
+
+    # Save
     plt.savefig('%s.pdf' % func.__name__)
     plt.clf()
 
 if __name__ == '__main__':
-    vary_elements()
-    vary_devices()
-    vary_users()
-    vary_users_and_devices()
-    plot(vary_elements, xlabel='Number of Elements')
+    # vary_elements()
+    # vary_devices()
+    # vary_users()  # TODO
+    vary_users_and_devices()  # TODO
+    plot(vary_elements, xlabel='Number of Elements', legend=True)
     plot(vary_devices, xlabel='Number of Devices')
-    plot(vary_users, xlabel='Number of Users')
-    plot(vary_users_and_devices, xlabel='Number of Users')
+    # plot(vary_users, xlabel='Number of Users')
+    # plot(vary_users_and_devices, xlabel='Number of Users')
