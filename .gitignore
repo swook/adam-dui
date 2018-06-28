@@ -1,3 +1,7 @@
+# Python setuptools
+dist
+*.egg-info
+
 .idea
 *.pyc
 gurobi.log

@@ -17,7 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
+"""Websocket server for handling messages and passing to optimizer."""
+from websocket_server import WebsocketServer
 import logging
 import optimize
 import json
@@ -27,44 +28,40 @@ logger = logging.getLogger('SoManyScreens_backend')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-port = 8080
 
-class SimpleEcho(WebSocket):
+def handle_message(client, server, message):
+    """Handle message from client."""
+    # Handle keep-alive
+    try:
+        json_request = json.loads(message)
+    except:
+        pass
+    if 'type' in json_request and json_request['type'] == 'alive':
+        return
 
-    def optimize(self):
-        # Handle keep-alive
-        try:
-            json_request = json.loads(self.data)
-        except:
-            pass
-        if 'type' in json_request and json_request['type'] == 'alive':
-            return
-
-        # Handle proper input
-        try:
-            web_output = optimize.handle_web_input(self.data)
-            # logger.info(web_output)
-            self.sendMessage(web_output)
-        except:
-            tb = traceback.format_exc()
-            logger.debug('\n%s\n' % tb)
-            self.sendMessage(json.dumps({
-                'error': tb,
-                'token': json_request['token'],
-            }).decode('utf-8'))
-
-    def handleMessage(self):
-        # logger.debug('\nReceived data from client:\n%s\n' % self.data)
-        self.optimize()
-
-    def handleConnected(self):
-        logger.info('%s:%d connected.' % self.address)
-
-    def handleClose(self):
-        logger.info('%s:%d disconnected.' % self.address)
-
+    # Handle proper input
+    try:
+        web_output = optimize.handle_web_input(message)
+        # logger.info(web_output)
+        server.send_message(client, web_output)
+    except:
+        tb = traceback.format_exc()
+        logger.debug('\n%s\n' % tb)
+        server.send_message(client, json.dumps({
+            'error': tb,
+            'token': json_request['token'],
+        }).decode('utf-8'))
 
 port = 8001
 logger.info('Starting backend at port %d' % port)
-server = SimpleWebSocketServer('', port, SimpleEcho)
-server.serveforever()
+server = WebsocketServer(port, host='0.0.0.0')  # , loglevel=logging.INFO)
+server.set_fn_new_client(
+    lambda client, server:
+        logger.info('%s:%d connected.' % client['address'])
+)
+server.set_fn_client_left(
+    lambda client, server:
+        logger.info('%s:%d disconnected.' % client['address'])
+)
+server.set_fn_message_received(handle_message)
+server.run_forever()
