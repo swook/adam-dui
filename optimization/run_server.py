@@ -1,32 +1,51 @@
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
+import logging
 import optimize
 import json
+import traceback
+
+logger = logging.getLogger('SoManyScreens_backend')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 port = 8080
 
 class SimpleEcho(WebSocket):
-    recv = ""
-    send = ""
+
     def optimize(self):
+        # Handle keep-alive
+        try:
+            json_request = json.loads(self.data)
+        except:
+            pass
+        if 'type' in json_request and json_request['type'] == 'alive':
+            return
+
+        # Handle proper input
         try:
             web_output = optimize.handle_web_input(self.data)
+            # logger.info(web_output)
             self.sendMessage(web_output)
-        except Exception as e:
-            print(e)
-            pass
+        except:
+            tb = traceback.format_exc()
+            logger.debug('\n%s\n' % tb)
+            self.sendMessage(json.dumps({
+                'error': tb,
+                'token': json_request['token'],
+            }).decode('utf-8'))
 
     def handleMessage(self):
-        print(self.data)
+        # logger.debug('\nReceived data from client:\n%s\n' % self.data)
         self.optimize()
 
     def handleConnected(self):
-        print(self.address, 'connected')
+        logger.info('%s:%d connected.' % self.address)
 
     def handleClose(self):
-        print(self.address, 'closed')
+        logger.info('%s:%d disconnected.' % self.address)
 
 
-
+port = 8001
+logger.info('Starting backend at port %d' % port)
 server = SimpleWebSocketServer('', port, SimpleEcho)
-print 'server running on port', port
 server.serveforever()
