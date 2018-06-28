@@ -1,12 +1,10 @@
-# SoManyDevices
+# AdaM
 
-![SoManyDevices Demo](material/demo.gif)
-
-## Backend (Optimizer)
+## Backend (Gurobi MILP Optimizer)
 
 Prerequisites:
 
- * Install Gurobi Optimization [http://www.gurobi.com/](http://www.gurobi.com/)
+ * Install Gurobi Solver [http://www.gurobi.com/](http://www.gurobi.com/)
 
 To install and run optimizer:
 
@@ -14,9 +12,9 @@ To install and run optimizer:
     * Navigate to subfolder `simple-websocket-server`
     * Run `sudo python setup.py install`
     * Navigate to subfolder `optimization`
-    * Run `python run_server.py`
-    
-## Fontend (Webstrates)
+    * Run `python2 run_server.py`
+
+## Frontend (Webstrates)
 
 The frontend requires a manager instance that analyzes the target website, which will be distributed across devices. It also retains a list of connected devices. The manager calls the optimizer every time a device connects or disconnects and applies the optimized allocation and layout on all connected devices.
 

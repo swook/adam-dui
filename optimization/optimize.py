@@ -1,6 +1,5 @@
 import converters
 import optimize_device_assignment
-import optimize_layout
 
 
 def handle_web_input(web_input):
@@ -23,11 +22,5 @@ Output:
     }
 '''
 def optimize(elements, devices, users):
-    # Run 1st optimization
     output, _ = optimize_device_assignment.optimize(elements, devices, users)
-
-    # # Run 2nd optimization
-    # for device_class, elements in output.items():
-    #     output[device_class] = optimize_layout.optimize(elements)
-
     return output

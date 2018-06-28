@@ -157,11 +157,11 @@ def optimize(elements, devices, users):
             model.addConstr(min_ratio_unique_elements <= user_num_unique_elements[u] / num_user_elements)
 
     # Objective function
-    quality_term        = 0.0
-    completeness_term      = 0.0
+    quality_term      = 0.0
+    completeness_term = 0.0
 
-    quality_weight        = 0.8
-    completeness_weight      = 0.2
+    quality_weight      = 0.8
+    completeness_weight = 0.2
     # assert np.abs(compatibility_weight + quality_weight + completeness_weight - 1.0) < 1e-6
 
     for d, device in enumerate(devices):

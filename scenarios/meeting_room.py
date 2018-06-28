@@ -17,7 +17,7 @@ scenario.add_elements_from_text(
     # NOTE: Leave name and importance empty if additional widget type of same element
     '''
     Canvas                 | 10 | 1440 | 900 | 2600 | 1950 | 5050
-    Colour Picker          |  5 |   50 |  50 |  200 |  200 | 1052
+    Colour Picker          | 12 |   50 |  50 |  200 |  200 | 1052
     Meeting Minutes (view) |  4 |  500 | 400 |  900 | 1200 | 5000
     Meeting Minutes (edit) |  0 |  500 | 500 |  900 | 1300 | 5502
     Time                   |  1 |  100 | 100 |  300 |  200 | 5000
@@ -58,7 +58,7 @@ scenario.set_user_importance('manager', 'Calendar', 20)
 scenario.set_user_importance('chair', 'Agenda', 20)
 scenario.set_user_importance('chair', 'Time', 20)
 
-scenario.set_user_importance('employee', 'Facebook', 10)
+scenario.set_user_importance('employee', 'Facebook', 8)
 
 scenario.set_user_importance('intern', 'Personal Notes', 10)
 

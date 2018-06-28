@@ -2,8 +2,10 @@
 # flake8: noqa
 import random
 import string
+import os
 import time
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -13,6 +15,8 @@ from element import Element
 from properties import Properties
 from optimize_device_assignment import optimize
 
+out_dir = 'scalability_test_outputs'
+matplotlib.rcParams['text.usetex'] = True
 num_trials = 10
 
 def vary_elements():
@@ -39,7 +43,7 @@ def vary_elements():
             j += 1
         y[i] = np.mean(time_diffs)
         print('%d elements: %.2fs' % (x[i], y[i]))
-    np.savetxt('vary_elements.txt', np.stack([x, y], axis=1))
+    np.savetxt('%s/vary_elements.txt' % out_dir, np.stack([x, y], axis=1))
 
 def vary_devices():
     n = 100
@@ -65,7 +69,7 @@ def vary_devices():
             j += 1
         y[i] = np.mean(time_diffs)
         print('%d devices: %.2fs' % (x[i], y[i]))
-    np.savetxt('vary_devices.txt', np.stack([x, y], axis=1))
+    np.savetxt('%s/vary_devices.txt' % out_dir, np.stack([x, y], axis=1))
 
 def vary_users():
     n = 20
@@ -91,7 +95,7 @@ def vary_users():
             j += 1
         y[i] = np.mean(time_diffs)
         print('%d users: %.2fs' % (x[i], y[i]))
-    np.savetxt('vary_users.txt', np.stack([x, y], axis=1))
+    np.savetxt('%s/vary_users.txt' % out_dir, np.stack([x, y], axis=1))
 
 def vary_users_and_devices():
     n = 20
@@ -122,7 +126,7 @@ def vary_users_and_devices():
             j += 1
         y[i] = np.mean(time_diffs)
         print('%d users & %d devices: %.2fs' % (x[i], num_devices, y[i]))
-    np.savetxt('vary_users_and_devices.txt', np.stack([x, y], axis=1))
+    np.savetxt('%s/vary_users_and_devices.txt' % out_dir, np.stack([x, y], axis=1))
 
 def generate_elements(n):
     rands_per_entry = 5
@@ -204,16 +208,16 @@ def random_properties():
     return Properties(*np.random.random_integers(0, 5, (4, 1)))
 
 def plot(func, xlabel, ylabel='Time to Solution / s'):
-    log = np.loadtxt('%s.txt' % func.__name__)
+    log = np.loadtxt('%s/%s.txt' % (out_dir, func.__name__))
     x = log[:, 0]
     y = log[:, 1]
 
     # Define figure
     fig = plt.figure(figsize=(3, 1.6))
-    fig.subplots_adjust(bottom=0.12, left=0.16, top=0.99, right=0.97)
+    fig.subplots_adjust(bottom=0.13, left=0.16, top=0.99, right=0.97)
 
     # Plot data points
-    plt.plot(x, y, 'r.-', aa=True)
+    plt.plot(x, y, 'r.', aa=True)
 
     # Regression fit
     if func.__name__ == 'vary_users':
@@ -253,14 +257,20 @@ def plot(func, xlabel, ylabel='Time to Solution / s'):
     # plt.grid(alpha=0.1, color='b')
 
     # Save
-    plt.savefig('%s.pdf' % func.__name__)
+    plt.savefig('%s/%s.pdf' % (out_dir, func.__name__))
     plt.clf()
 
 if __name__ == '__main__':
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+
+    # Uncomment the following to run tests
     # vary_elements()
     # vary_devices()
     # vary_users()
     # vary_users_and_devices()
+
+    # Plot results
     plot(vary_elements, xlabel='Number of Elements')
     plot(vary_devices, xlabel='Number of Devices')
     plot(vary_users, xlabel='Number of Users')
