@@ -43,3 +43,7 @@ Simulator: [https://hikaru.cs.au.dk/BJcEFi4UW/stable/?copy](https://hikaru.cs.au
 
 The target website is currently hard-coded and points to [https://hikaru.cs.au.dk/youtube/](https://hikaru.cs.au.dk/youtube/). To test it with real devices, open [https://hikaru.cs.au.dk/youtube/?deviceClass=tablet](https://hikaru.cs.au.dk/youtube/?deviceClass=tablet) and replace the value of `deviceClass` from `tablet` to either `tv`, `laptop`, `smartphone`, or `smartwatch`.
 -->
+
+## Demonstration Frontend (incl. Simulator)
+
+To be made available soon.
