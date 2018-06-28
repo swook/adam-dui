@@ -1,13 +1,13 @@
-Scenarios Testing
-=================
+Scenario Testing
+================
 
 ## Running Scenarios
-Simply run `python scenario_name.py` where `scenario_name` is replaced by `video_party` for example.
+Simply run `python scenario_name.py` where `scenario_name` is replaced by `media_sharing` for example.
 
 You will see the specified inputs and optimized outputs as well as any tests which have been specified.
 
 ## Writing Scenarios
-See `video_party.py` for an example. You can specify elements, widget types, and devices using a text-based configuration.
+See `media_sharing.py` for an example. You can specify elements, widget types, and devices using a text-based configuration.
 
 A created scenario can then be *run*, where our optimizer attempts to assign widgets to devices. This is done by calling `Scenario::run()`.
 
