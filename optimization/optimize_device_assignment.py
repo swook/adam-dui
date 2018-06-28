@@ -65,7 +65,7 @@ def optimize(elements, devices, users):
     model = Model('device_assignment')
     model.params.LogToConsole = 0  # Uncomment to see logs in console
 
-    # Add decision variables
+    # (2) Add decision variables
     x = {}
     s = {}
     for e, element in enumerate(elements):
@@ -77,18 +77,20 @@ def optimize(elements, devices, users):
     model.update()
 
     for d, device in enumerate(devices):
-        # (7) sum of widget areas shouldn't exceed device capacity (area)
+        # (10) sum of widget areas shouldn't exceed device capacity (area)
         model.addConstr(quicksum(s[e, d] for e, _ in enumerate(elements)) <= device._area,
                         'capacity_constraint_%s' % device.name)
 
         for e, element in enumerate(elements):
-            # (8,9) the min. width/height of an element should not exceed device width/height
+            # (11) the min. width/height of an element should not exceed device width/height
             if element.min_width > device.width or element.min_height > device.height:
                 model.addConstr(x[e, d] == 0,
                                 'min_size_exceeds_constraint_%s_on_%s' % (element.name, device.name))
 
-            # (10,11) Set s to zero if x is zero
+            # (9) Set s to zero if x is zero
             model.addGenConstrIndicator(x[e, d], False, s[e, d] == 0)
+
+            # (9) Ensure s within possible min/max
             model.addGenConstrIndicator(x[e, d], True, s[e, d] >= element._min_area)
             model.addGenConstrIndicator(x[e, d], True, s[e, d] <= min(element._max_area, device._area))
 
@@ -101,7 +103,7 @@ def optimize(elements, devices, users):
     element_device_access = np.ones((len(elements), len(devices)), dtype=bool)
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
-            # (13) user has no access to element so don't assign to user's device
+            # (12) user has no access to element so don't assign to user's device
             if not np.any(np.dot(user_device_access[:, d], user_element_access[:, e])):
                 element_device_access[e, d] = 0
 
@@ -114,15 +116,13 @@ def optimize(elements, devices, users):
                 model.addConstr(x[e, d] == 0,
                                 name='privacy_%s_%s' % (element.name, device.name))
 
-            # Do not assign 0-importance elements
-            # TODO: add to paper
+            # (14) Do not assign 0-importance elements
             elif element_device_imp[e, d] < 1e-5:
                 element_device_access[e, d] = 0
                 model.addConstr(x[e, d] == 0,
                                 name='zero_importance_%s_%s' % (element.name, device.name))
 
-            # Do not assign 0-compatibility elements
-            # TODO: add to paper
+            # (14) Do not assign 0-compatibility elements
             elif element_device_comp[e, d] < 1e-5:
                 element_device_access[e, d] = 0
                 model.addConstr(x[e, d] == 0,
@@ -130,13 +130,8 @@ def optimize(elements, devices, users):
     model.update()
 
     for d, device in enumerate(devices):
-        # if np.any(element_device_access[:, d]):
-        #     # (12) a device which is accessible by a user should have at least one element
-        #     model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) >= 1,
-        #                     'at_least_one_widget_constraint_%s' % device.name)
-        # else:
         if not np.any(element_device_access[:, d]):
-            # (12) a device which is not accessible by any user should not have a element
+            # (13) a device which is not accessible by any user should not have a element
             model.addConstr(quicksum(x[e, d] for e, _ in enumerate(elements)) == 0,
                             'no_element_constraint_%s' % device.name)
     model.update()
@@ -155,6 +150,7 @@ def optimize(elements, devices, users):
             model.addConstr(user_num_elements[u, e]
                             == quicksum(x[e, d] for d, _ in user_devices))
 
+            # (6) whether element has been made available to user
             user_has_element[u, e] = model.addVar(vtype=GRB.SEMIINT)
             model.addConstr(user_has_element[u, e] <= user_num_elements[u, e])
             model.addConstr(user_has_element[u, e] <= 1)
@@ -167,6 +163,7 @@ def optimize(elements, devices, users):
         model.addConstr(user_num_unique_elements[u] ==
                         quicksum(user_has_element[u, e] for e, element in user_elements))
 
+    # (7) completeness ratio of user with min. completeness
     min_ratio_unique_elements = model.addVar(vtype=GRB.CONTINUOUS, lb=0.0)
     for u, user in enumerate(users):
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
@@ -183,7 +180,7 @@ def optimize(elements, devices, users):
     # assert np.abs(compatibility_weight + quality_weight + completeness_weight - 1.0) < 1e-6
 
     for d, device in enumerate(devices):
-        # 1ST TERM
+        # (3)
         # Maximize summed area of elements weighted by importance
         # Also maximize compatibility in assignment
         quality_term += quicksum(
@@ -191,7 +188,7 @@ def optimize(elements, devices, users):
                     for e, element in enumerate(elements)
                 ) / (device._area)
 
-    # Term for trying to assign all available elements
+    # (8) Term for trying to assign all available elements
     for u, user in enumerate(users):
         user_devices = [(d, device) for d, device in enumerate(devices) if user_device_access[u, d]]
         user_elements = [(e, element) for e, element in enumerate(elements) if user_element_access[u, e]]
@@ -201,10 +198,10 @@ def optimize(elements, devices, users):
                 for e, element in user_elements
             ) / (len(user_elements) * len(users))
 
-    # Additional term: ensure minimum coverage is optimized more
+    # (8) Additional term: ensure minimum coverage is optimized more
     completeness_term += min_ratio_unique_elements
 
-    # Register objective function terms
+    # (1) Register objective function terms
     model.ModelSense = GRB.MAXIMIZE
     model.setObjectiveN(
         quality_term,
@@ -338,7 +335,7 @@ def pre_process_objects(elements, devices, users):
     for u, user in enumerate(users):
         element_user_imp[:, u] = normalized(element_user_imp[:, u])
 
-    # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
+    # If close to zero importance, set access to 0
     for e, element in enumerate(elements):
         for u, user in enumerate(users):
             if element_user_imp[e, u] < 1e-6:
@@ -351,7 +348,7 @@ def pre_process_objects(elements, devices, users):
         if num_users_on_device > 0:
             element_device_imp[:, d] /= num_users_on_device
 
-    # TODO: REMOVE THIS HACK WHICH WAS FOR USER STUDY
+    # Set accumulated element-device to zero if no users with access to both e and d
     for d, device in enumerate(devices):
         for e, element in enumerate(elements):
             comp = np.multiply(user_element_access[:, e], user_device_access[:, d])
