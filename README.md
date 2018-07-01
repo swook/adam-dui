@@ -11,7 +11,7 @@ Source code for the CHI 2018 paper:
 
 Clone this repository with its submodules using a command such as:
 
-    git clone --recursive git@github.com:swook/adam-dui.git
+    git clone --recursive https://github.com/swook/adam-dui.git
 
 
 Install the [Gurobi Solver](http://www.gurobi.com/). The solver is [available for free](https://user.gurobi.com/download/licenses/free-academic) for academic purposes.
